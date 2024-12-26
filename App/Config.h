@@ -1,0 +1,100 @@
+#ifndef APP_CONFIG_H_
+#define APP_CONFIG_H_
+
+/* FreeRTOS */
+#include <FreeRTOS.h>
+
+/* C++ */
+#include <cmath>
+
+/* ハードウェアの設定 */
+constexpr float kRegulatorVoltage = 3.298f; /* 3.3V レギュレータ電圧[V] */
+constexpr float kMachineWeight = 125.0e-3f; /* 機体重量[kg] */
+constexpr float kWheelDiameter = 23.45e-3f; /* 車輪直径[m] TODO: 測る方法を考える */
+/* MEMO: 長い直尺の横を走らせて走行距離と内部計算値の差で補正 */
+constexpr float kWheelRadius = kWheelDiameter / 2.0f; /* 車輪半径[m] */
+constexpr float kGearRatio = 42.0f / 11.0f;           /* ギア比[spur/pinion] */
+constexpr float kTreadWidth = 96.23e-3f;              /* トレッド幅[m] */
+
+/* バッテリー */
+constexpr float kBatteryVoltageAdcGain = 4.0f;           /* バッテリー電圧AD変換ゲイン */
+constexpr float kBatteryVoltageLimitMin = 10.50f;        /* バッテリー下限電圧[V] */
+constexpr float kBatteryVoltageLimitMax = 12.60f;        /* バッテリー上限電圧[V] */
+constexpr uint32_t kBatteryVoltageNumMovingAverage = 16; /* バッテリー電圧移動平均サンプル数 */
+constexpr uint32_t kBatteryErrorLimit = 5000;            /* バッテリー電圧異常検出時間 [ms] */
+constexpr uint32_t kPowerAdcErrorLimit = 5000;           /* 電力計測異常検出時間 [ms] */
+
+/* モーター */
+constexpr float kTorqueConstant = 4.83e-3f;                            /* モータートルク定数[N*m/A] */
+constexpr float kMotorBackEmf = 1.0f / 1980.0f;                        /* モーター起電力定数[V/rpm] */
+constexpr float kMotorResistance = 1.94f;                              /* モーター抵抗[Ω] */
+constexpr float kMotorLimitVoltage = 9.0f;                             /* モーター上限電圧[V] */
+constexpr float kMotorCurrentMeasureDivResistor = 4.99e3f;             /* モーター電流計測分圧抵抗[Ω] */
+constexpr float kMotorCurrentMeasureOffset = kRegulatorVoltage / 2.0f; /* モーター電流計測オフセット[V] */
+constexpr float kSuctionFanLimitVoltage = 3.7f;                        /* 吸引ファン上限電圧[V] */
+
+/* エンコーダー */
+constexpr uint32_t kEncoderNumMovingAverage = 4; /* エンコーダー移動平均サンプル数 */
+
+/* FF項 */
+constexpr float kFeedForwardLinearGain = 1.0f;  /* 並進方向 TODO: 低速時はない方が良いかも */
+constexpr float kFeedForwardAngularGain = 0.0f; /* 旋回方向 TODO: なんか安定しない 原因を探る */
+
+/* 周期通知 (Periodic) */
+constexpr float kPeriodicNotifyInterval = 1.0e-3f; /* センサー更新間隔[s] */
+
+/* ラインセンサー */
+constexpr uint32_t kLineNumCalibrationSample = 5000; /* ラインセンサーキャリブレーション時間[ms] */
+constexpr uint32_t kLineNumErrorMovingAverage = 32; /* ラインセンサーエラー角度移動平均サンプル数 */
+constexpr uint8_t kLineCrossDetectNum = 8;          /* ラインセンサー交差とする反応センサ個数 */
+constexpr float kLineDistanceFromCenter = 81.04e-3f; /* ラインセンサーから車軸までの距離[m] */
+constexpr float kLineDistanceFromMarker = 51.03e-3f; /* ラインセンサーからマーカーセンサーまでの距離[m] */
+constexpr float kLineToDistCoeff = 0.027397009f;       /* ラインセンサー横ずれ距離変換 係数 */
+constexpr float kLineToDistIntercept = -0.0011686919f; /* ラインセンサー横ずれ距離変換 切片 */
+constexpr float kLineErrorAngleLimit = 0.17453292f;    /* ラインセンサーエラー角度上限[rad] */
+constexpr float kLineBrownOutIgnoreDistance = 0.1f;    /* ラインセンサーブラウンアウト無視距離[m] */
+constexpr float kLineDetectThreshold = 0.6f;           /* ラインセンサー検知しきい値 */
+constexpr float kMarkerDetectDistance = 0.010f;        /* マーカー検知距離[m] */
+constexpr uint32_t kMarkerNumMovingAverage = 4;        /* ラインセンサー移動平均サンプル数 */
+constexpr float kMarkerDetectThreshold = 0.5f;         /* マーカーセンサー検知しきい値 */
+constexpr float kMarkerIgnoreOffset = 0.05f;           /* マーカー検知無視オフセット[m] */
+
+/* ライン記憶 */
+constexpr float kExploringLoggingDistance = 0.01f; /* 曲率マップ解像度[m] */
+constexpr float kExploringMaxRadius = 5.0f;        /* 最大曲率半径[m] */
+constexpr float kExploringMinAngle = 0.00001f;     /* 最小角度[rad] */
+
+/* 位置補正 */
+constexpr float kCorrectorAllowErrorCurvature = 0.1f; /* 曲率補正許容誤差 [m] */
+constexpr float kCorrectorAllowErrorCrossLine = 0.1f; /* 交差補正許容誤差 [m] */
+
+/* UI */
+constexpr uint32_t kButtonShortPressThreshold = 100; /* 短押しきい値[ms] */
+constexpr uint32_t kButtonLongPressThreshold = 1000; /* 長押しきい値[ms] */
+constexpr uint16_t kBuzzerFrequency = 4000;          /* ブザー周波数[Hz] */
+constexpr uint16_t kBuzzerEnterDuration = 100;       /* ブザーエンター鳴動時間[ms] */
+constexpr uint16_t kBuzzerCancelDuration = 25;       /* ブザーキャンセル鳴動時間[ms] */
+constexpr float kModeSelectWheelSpeed = 0.1f;        /* モード選択車輪速度[m/s] */
+
+/* タスク優先度の設定 */
+enum : UBaseType_t {
+  kPriorityIdle = 0,
+  kPriorityLow = 1,
+  kPriorityBelowNormal = 2,
+  kPriorityNormal = 3,
+  kPriorityAboveNormal = 4,
+  kPriorityHigh = 5,
+  kPriorityRealtime = 6,
+  kPriorityError = 7,
+};
+constexpr UBaseType_t kPriorityDefault = kPriorityNormal;           /* デフォルト(STM32CubeMXで設定) */
+constexpr UBaseType_t kPriorityCom = kPriorityNormal;               /* 通信 */
+constexpr UBaseType_t kPriorityFram = kPriorityNormal;              /* FRAM */
+constexpr UBaseType_t kPriorityUi = kPriorityAboveNormal;           /* UI */
+constexpr UBaseType_t kPriorityLineSensing = kPriorityHigh;         /* ライン計測 */
+constexpr UBaseType_t kPriorityMotionSensing = kPriorityHigh;       /* 動作計測 */
+constexpr UBaseType_t kPriorityMotionPlaning = kPriorityHigh;       /* 動作計画 */
+constexpr UBaseType_t kPriorityPeriodic = kPriorityRealtime;        /* 1ms通知 */
+constexpr UBaseType_t kPriorityPowerMonitoring = kPriorityRealtime; /* 電力監視 */
+
+#endif  // APP_CONFIG_H_

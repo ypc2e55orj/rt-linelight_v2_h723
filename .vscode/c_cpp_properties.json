@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "name": "STM32H723",
+            "includePath": [
+                "${default}",
+                "${workspaceFolder}/Drivers/CMSIS/Include",
+                "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32H7xx/Include",
+                "${workspaceFolder}/Drivers/CMSIS/Include",
+                "${workspaceFolder}/Drivers/STM32H7xx_HAL_Driver/Inc",
+                "${workspaceFolder}/Core/Inc",
+                "${workspaceFolder}/Middlewares/Third_Party/FreeRTOS/Source/include",
+                "${workspaceFolder}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS",
+                "${workspaceFolder}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F",
+                "${workspaceFolder}/App"
+            ],
+            "defines": [
+                "STM32H723xx",
+                "M_PI=3.14159265358979323846"
+            ],
+            "compilerPath": "C:/ST/STM32CubeCLT_1.15.1/GNU-tools-for-STM32/bin/arm-none-eabi-gcc.exe",
+            "intelliSenseMode": "gcc-arm"
+        }
+    ],
+    "version": 4
+}
