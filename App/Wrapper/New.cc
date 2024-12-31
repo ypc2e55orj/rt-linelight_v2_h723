@@ -30,25 +30,25 @@ static void operator_delete_impl(void *ptr) {
 
 void *operator new(std::size_t size) {
   void *p = operator_new_impl(size);
-  if (p == nullptr) {
-    throw std::bad_alloc();
-  }
+  // if (p == nullptr) {
+  //   throw std::bad_alloc();
+  // }
   return p;
 }
 void *operator new(std::size_t size, const std::nothrow_t &) noexcept {
-  try {
+  // try {
     return ::operator new(size);
-  } catch (...) {
-    return nullptr;
-  }
+  // } catch (...) {
+  //   return nullptr;
+  // }
 }
 void *operator new[](std::size_t size) { return ::operator new(size); }
 void *operator new[](std::size_t size, const std::nothrow_t &) noexcept {
-  try {
+  // try {
     return ::operator new[](size);
-  } catch (...) {
-    return nullptr;
-  }
+  // } catch (...) {
+  //   return nullptr;
+  // }
 }
 
 void operator delete(void *ptr) { operator_delete_impl(ptr); }

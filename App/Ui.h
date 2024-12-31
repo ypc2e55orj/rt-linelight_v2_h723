@@ -12,22 +12,22 @@
 class Ui : public Task<Ui> {
  public:
   enum IndicatorBit {
-    kIndicator1Bit,     /* 0x01 */
-    kIndicator2Bit,     /* 0x02 */
-    kIndicator3Bit,     /* 0x04 */
-    kIndicator4Bit,     /* 0x08 */
-    kIndicator5Bit,     /* 0x10 */
-    kIndicatorLeftBit,  /* 0x20 */
-    kIndicatorRightBit, /* 0x40 */
+    kIndicatorBit0, /* 0x01 */
+    kIndicatorBit1, /* 0x02 */
+    kIndicatorBit2, /* 0x04 */
+    kIndicatorBit3, /* 0x08 */
+    kIndicatorBit4, /* 0x10 */
+    kIndicatorBit5, /* 0x20 */
+    kIndicatorBit6, /* 0x40 */
   };
   enum IndicatorMask {
-    kIndicator1Mask = (1 << kIndicator1Bit),
-    kIndicator2Mask = (1 << kIndicator2Bit),
-    kIndicator3Mask = (1 << kIndicator3Bit),
-    kIndicator4Mask = (1 << kIndicator4Bit),
-    kIndicator5Mask = (1 << kIndicator5Bit),
-    kIndicatorLeftMask = (1 << kIndicatorLeftBit),
-    kIndicatorRightMask = (1 << kIndicatorRightBit),
+    kIndicatorMask0 = (1 << kIndicatorBit0),
+    kIndicatorMask1 = (1 << kIndicatorBit1),
+    kIndicatorMask2 = (1 << kIndicatorBit2),
+    kIndicatorMask3 = (1 << kIndicatorBit3),
+    kIndicatorMask4 = (1 << kIndicatorBit4),
+    kIndicatorMask5 = (1 << kIndicatorBit5),
+    kIndicatorMask6 = (1 << kIndicatorBit6),
   };
 
   /* コンストラクタ */

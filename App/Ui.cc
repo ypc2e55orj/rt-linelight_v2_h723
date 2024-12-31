@@ -12,14 +12,14 @@
 // #define UI_FORCE_MUTE /* 強制ミュート */
 
 /* 外部変数 */
-extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim5;
 
 /* コンストラクタ */
 Ui::Ui() {
   ledQueue_ = xQueueCreateStatic(1, sizeof(Indicator), ledQueueStorageBuffer_, &ledQueueBuffer_);
   buzzerQueue_ = xQueueCreateStatic(1, sizeof(Buzzer), buzzerQueueStorageBuffer_, &buzzerQueueBuffer_);
   buttonQueue_ = xQueueCreateStatic(1, sizeof(Button), buttonQueueStorageBuffer_, &buttonQueueBuffer_);
-  buzzer_.pwmFreq = (HAL_RCC_GetPCLK1Freq() * 2) / (htim1.Init.Prescaler + 1);
+  buzzer_.pwmFreq = (HAL_RCC_GetPCLK1Freq() * 2) / (htim5.Init.Prescaler + 1);
 }
 
 /* UIタスクを作成 */
@@ -81,8 +81,8 @@ void Ui::Fatal() {
 
 /* タスク */
 void Ui::TaskEntry() {
-  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0);
-  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+  __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, 0);
+  HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_2);
   auto xLastWakeTime = xTaskGetTickCount();
   while (true) {
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(kUiUpdateInterval));
@@ -97,22 +97,20 @@ void Ui::TaskEntry() {
 void Ui::UpdateLed() {
   Indicator msg = {};
   if (xQueueReceive(ledQueue_, &msg, 0) == pdTRUE) {
-    if (msg.mask & kIndicatorRightMask)
-      HAL_GPIO_WritePin(LED_RIGHT_GPIO_Port, LED_RIGHT_Pin,
-                        (msg.pos & kIndicatorRightMask) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    if (msg.mask & kIndicatorLeftMask)
-      HAL_GPIO_WritePin(LED_LEFT_GPIO_Port, LED_LEFT_Pin,
-                        (msg.pos & kIndicatorLeftMask) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    if (msg.mask & kIndicator1Mask)
-      HAL_GPIO_WritePin(LED_1_GPIO_Port, LED_1_Pin, (msg.pos & kIndicator1Mask) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    if (msg.mask & kIndicator2Mask)
-      HAL_GPIO_WritePin(LED_2_GPIO_Port, LED_2_Pin, (msg.pos & kIndicator2Mask) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    if (msg.mask & kIndicator3Mask)
-      HAL_GPIO_WritePin(LED_3_GPIO_Port, LED_3_Pin, (msg.pos & kIndicator3Mask) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    if (msg.mask & kIndicator4Mask)
-      HAL_GPIO_WritePin(LED_4_GPIO_Port, LED_4_Pin, (msg.pos & kIndicator4Mask) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    if (msg.mask & kIndicator5Mask)
-      HAL_GPIO_WritePin(LED_5_GPIO_Port, LED_5_Pin, (msg.pos & kIndicator5Mask) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    if (msg.mask & kIndicatorMask0)
+      HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, (msg.pos & kIndicatorMask0) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    if (msg.mask & kIndicatorMask1)
+      HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, (msg.pos & kIndicatorMask1) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    if (msg.mask & kIndicatorMask2)
+      HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, (msg.pos & kIndicatorMask2) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    if (msg.mask & kIndicatorMask3)
+      HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, (msg.pos & kIndicatorMask3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    if (msg.mask & kIndicatorMask4)
+      HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, (msg.pos & kIndicatorMask4) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    if (msg.mask & kIndicatorMask5)
+      HAL_GPIO_WritePin(LED5_GPIO_Port, LED5_Pin, (msg.pos & kIndicatorMask5) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    if (msg.mask & kIndicatorMask6)
+      HAL_GPIO_WritePin(LED6_GPIO_Port, LED6_Pin, (msg.pos & kIndicatorMask6) ? GPIO_PIN_SET : GPIO_PIN_RESET);
   }
 }
 
@@ -130,18 +128,18 @@ void Ui::UpdateBuzzer() {
       buzzer_.remainDuration = msg.duration / kUiUpdateInterval;
 #ifndef UI_FORCE_MUTE
       uint16_t period = static_cast<uint16_t>(buzzer_.pwmFreq / msg.toneFreq);
-      __HAL_TIM_SET_AUTORELOAD(&htim1, period);
-      __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, period / 2);
+      __HAL_TIM_SET_AUTORELOAD(&htim5, period);
+      __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, period / 2);
 #endif  // UI_FORCE_MUTE
     } else {
-      __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0);
+      __HAL_TIM_SET_COMPARE(&htim5, TIM_CHANNEL_2, 0);
     }
   }
 }
 
 /* ボタン */
 void Ui::UpdateButton() {
-  bool pressed = HAL_GPIO_ReadPin(BUTTON_GPIO_Port, BUTTON_Pin) == GPIO_PIN_RESET;
+  bool pressed = HAL_GPIO_ReadPin(BUTTON0_GPIO_Port, BUTTON0_Pin) == GPIO_PIN_RESET;
 
   /* 離されたらキューに追加 */
   if (button_.prevPressed && !pressed) {

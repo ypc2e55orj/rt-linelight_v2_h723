@@ -14,12 +14,7 @@ extern ADC_HandleTypeDef hadc1;
 
 namespace LineSensing {
 /* IR LED点灯 */
-void SetIr(bool state) {
-  GPIO_InitTypeDef gpioPrOff = {};
-  gpioPrOff.Pin = IRLED_OFF_Pin;
-  gpioPrOff.Pull = state ? GPIO_PULLDOWN : GPIO_NOPULL;
-  HAL_GPIO_Init(IRLED_OFF_GPIO_Port, &gpioPrOff);
-}
+void SetIr(bool state) { HAL_GPIO_WritePin(IR_EN_GPIO_Port, IR_EN_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET); }
 
 /**
  * MARK: LineAdc

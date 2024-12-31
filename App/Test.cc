@@ -351,7 +351,7 @@ static void TestSuctionFan() {
       ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
       break;
     }
-    suction.SetDuty(2.5f / power.GetBatteryVoltage());
+    suction.SetDuty(4.2f / power.GetBatteryVoltage());
   }
   suction.Disable();
 }

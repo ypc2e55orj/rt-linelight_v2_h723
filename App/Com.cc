@@ -8,7 +8,7 @@
 #include "Config.h"
 
 /* グローバル変数定義 */
-extern UART_HandleTypeDef huart4;
+extern UART_HandleTypeDef huart1;
 
 /* DMA TXコールバック */
 void Com::TxCpltCallback(UART_HandleTypeDef *) {
@@ -30,8 +30,8 @@ Com::Com()
 
 /* シリアル通信を初期化 */
 bool Com::Initialize() {
-  HAL_UART_RegisterCallback(&huart4, HAL_UART_TX_COMPLETE_CB_ID, TxCpltCallback);
-  HAL_UART_RegisterCallback(&huart4, HAL_UART_RX_COMPLETE_CB_ID, RxCpltCallback);
+  HAL_UART_RegisterCallback(&huart1, HAL_UART_TX_COMPLETE_CB_ID, TxCpltCallback);
+  HAL_UART_RegisterCallback(&huart1, HAL_UART_RX_COMPLETE_CB_ID, RxCpltCallback);
 
   return TaskCreate("Com", configMINIMAL_STACK_SIZE, kPriorityCom);
 }
@@ -63,7 +63,7 @@ ComResponse Com::OnWriteRequest(const ComRequest &request) {
     uint32_t tx = std::min(kBufferSize, request.size - txTotal);
     memcpy(buffer_, request.writePtr + txTotal, tx);
     SCB_CleanDCache_by_Addr(reinterpret_cast<uint32_t *>(buffer_), kAlignedBufferSize);
-    if (HAL_UART_Transmit_DMA(&huart4, buffer_, static_cast<uint16_t>(tx)) == HAL_OK) {
+    if (HAL_UART_Transmit_DMA(&huart1, buffer_, static_cast<uint16_t>(tx)) == HAL_OK) {
       for (uint32_t txItm = 0; txItm < tx; ++txItm) {
         ITM_SendChar(buffer_[txItm]);
       }
@@ -81,7 +81,7 @@ ComResponse Com::OnReadRequest(const ComRequest &request) {
   ComResponse response = ComResponse::kSuccess;
   for (uint32_t rxTotal = 0; rxTotal < request.size;) {
     uint32_t rx = std::min(kBufferSize, request.size - rxTotal);
-    if (HAL_UART_Receive_DMA(&huart4, buffer_, static_cast<uint16_t>(rx)) == HAL_OK) {
+    if (HAL_UART_Receive_DMA(&huart1, buffer_, static_cast<uint16_t>(rx)) == HAL_OK) {
       xSemaphoreTake(rxCpltSemphr_, portMAX_DELAY);
     } else {
       response = ComResponse::kFailure;

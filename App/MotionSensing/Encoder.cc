@@ -11,9 +11,9 @@
 #include "Config.h"
 
 /* グローバル変数定義 */
-extern TIM_HandleTypeDef htim8; /* 右エンコーダー */
+extern TIM_HandleTypeDef htim4; /* 右エンコーダー */
 extern TIM_HandleTypeDef htim3; /* 左エンコーダー */
-static TIM_HandleTypeDef *encoders[] = {&htim8, &htim3};
+static TIM_HandleTypeDef *encoders[] = {&htim4, &htim3};
 
 namespace MotionSensing {
 static uint16_t GetTimCount(TIM_HandleTypeDef *htim, bool invert) {
