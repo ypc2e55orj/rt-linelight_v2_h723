@@ -4,7 +4,7 @@
 #include <main.h>
 
 /* Project */
-#include "config.h"
+#include "Config.h"
 
 /* C++ */
 #include <mutex>
