@@ -1,10 +1,6 @@
-.settings
-Debug
-Drivers
-Middlewares
-SWV_export
-
-.venv
-Analyze/*.csv
-Analyze/**/*.csv
-Analyze/*.xml
+compile_commands.json
+cmake_install.cmake
+CMakeCache.txt
+CMakeFiles
+build.ninja
+build
