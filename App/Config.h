@@ -9,12 +9,12 @@
 
 /* ハードウェアの設定 */
 constexpr float kRegulatorVoltage = 3.298f; /* 3.3V レギュレータ電圧[V] */
-constexpr float kMachineWeight = 125.0e-3f; /* 機体重量[kg] */
-constexpr float kWheelDiameter = 23.45e-3f; /* 車輪直径[m] TODO: 測る方法を考える */
+constexpr float kMachineWeight = 110.0e-3f; /* 機体重量[kg] */
+constexpr float kWheelDiameter = 23.0e-3f; /* 車輪直径[m] TODO: 測る方法を考える */
 /* MEMO: 長い直尺の横を走らせて走行距離と内部計算値の差で補正 */
 constexpr float kWheelRadius = kWheelDiameter / 2.0f; /* 車輪半径[m] */
 constexpr float kGearRatio = 42.0f / 11.0f;           /* ギア比[spur/pinion] */
-constexpr float kTreadWidth = 96.23e-3f;              /* トレッド幅[m] */
+constexpr float kTreadWidth = 101.0e-3f;              /* トレッド幅[m] */
 
 /* バッテリー */
 constexpr float kBatteryVoltageAdcGain = 4.0f;           /* バッテリー電圧AD変換ゲイン */
@@ -37,7 +37,7 @@ constexpr float kSuctionFanLimitVoltage = 3.7f;                        /* 吸引
 constexpr uint32_t kEncoderNumMovingAverage = 4; /* エンコーダー移動平均サンプル数 */
 
 /* FF項 */
-constexpr float kFeedForwardLinearGain = 1.0f;  /* 並進方向 TODO: 低速時はない方が良いかも */
+constexpr float kFeedForwardLinearGain = 0.0f;  /* 並進方向 TODO: 低速時はない方が良いかも */
 constexpr float kFeedForwardAngularGain = 0.0f; /* 旋回方向 TODO: なんか安定しない 原因を探る */
 
 /* 周期通知 (Periodic) */
@@ -48,7 +48,7 @@ constexpr uint32_t kLineNumCalibrationSample = 5000; /* ラインセンサーキ
 constexpr uint32_t kLineNumErrorMovingAverage = 32; /* ラインセンサーエラー角度移動平均サンプル数 */
 constexpr uint8_t kLineCrossDetectNum = 8;          /* ラインセンサー交差とする反応センサ個数 */
 constexpr float kLineDistanceFromCenter = 81.04e-3f; /* ラインセンサーから車軸までの距離[m] */
-constexpr float kLineDistanceFromMarker = 51.03e-3f; /* ラインセンサーからマーカーセンサーまでの距離[m] */
+constexpr float kLineDistanceFromMarker = 49.63e-3f; /* ラインセンサーからマーカーセンサーまでの距離[m] */
 constexpr float kLineToDistCoeff = 0.027397009f;       /* ラインセンサー横ずれ距離変換 係数 */
 constexpr float kLineToDistIntercept = -0.0011686919f; /* ラインセンサー横ずれ距離変換 切片 */
 constexpr float kLineErrorAngleLimit = 0.17453292f;    /* ラインセンサーエラー角度上限[rad] */
