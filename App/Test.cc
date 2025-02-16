@@ -45,12 +45,30 @@ static void TestVelocityMeasure() {
 }
 /* 宴会芸テスト */
 static void TestEnkaigei() {
+  auto &ui = Ui::Instance();
   auto &servo = MotionPlaning::MotionPlaning::Instance().GetServo();
-  servo.SetGain({0.8f, 0.06f, 0.1f}, {0.3f, 0.01f, 0.1f});
+  servo.SetGain({0.0f, 0.00f, 0.0f}, {0.3f, 0.0f, 0.0f});
 
   MotionPlaning::MotionPlaning::Instance().NotifyStart();
   MotionSensing::MotionSensing::Instance().NotifyStart();
-  Ui::Instance().WaitPress();
+  auto xLastWakeTime = xTaskGetTickCount();
+  uint32_t count = 0;
+  while (true) {
+    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1));
+    if (ui.WaitPress(0) >= kButtonShortPressThreshold) {
+      ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
+      break;
+    }
+    if (++count >= 10) {
+      count = 0;
+      auto tick = HAL_GetTick();
+      auto ff = servo.GetFeedForwardAmount();
+      auto fb = servo.GetFeedBackAmount();
+      auto v = servo.GetMotorVoltage();
+      printf(">t:%ld\n>ffr:%f\n>ffl:%f\n>fbv:%f\n>fbo:%f\n>vr:%f\n>vl:%f\n", tick, ff[0], ff[1], fb[0], fb[1], v[0],
+             v[1]);
+    }
+  }
   MotionPlaning::MotionPlaning::Instance().NotifyStop();
   MotionSensing::MotionSensing::Instance().NotifyStop();
 }
@@ -171,8 +189,8 @@ static void TestTurn() {
     auto cur = power.GetMotorCurrent();
     testLog.time = t;
     testLog.targetVelocity = targetVelocity;
-    testLog.measuredVelocity = vel.trans;
-    testLog.distance = dis.trans;
+    testLog.measuredVelocity = vel.rot;
+    testLog.distance = dis.rot;
     testLog.motorVoltageRight = dut[0];
     testLog.motorVoltageLeft = dut[1];
     testLog.motorCurrentRight = cur[0];
