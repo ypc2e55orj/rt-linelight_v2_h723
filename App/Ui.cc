@@ -98,15 +98,15 @@ void Ui::UpdateLed() {
   Indicator msg = {};
   if (xQueueReceive(ledQueue_, &msg, 0) == pdTRUE) {
     if (msg.mask & kIndicatorMask0)
-      HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, (msg.pos & kIndicatorMask0) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, (msg.pos & kIndicatorMask0) ? GPIO_PIN_SET : GPIO_PIN_RESET);
     if (msg.mask & kIndicatorMask1)
-      HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, (msg.pos & kIndicatorMask1) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, (msg.pos & kIndicatorMask1) ? GPIO_PIN_SET : GPIO_PIN_RESET);
     if (msg.mask & kIndicatorMask2)
       HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, (msg.pos & kIndicatorMask2) ? GPIO_PIN_SET : GPIO_PIN_RESET);
     if (msg.mask & kIndicatorMask3)
-      HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, (msg.pos & kIndicatorMask3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, (msg.pos & kIndicatorMask3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
     if (msg.mask & kIndicatorMask4)
-      HAL_GPIO_WritePin(LED4_GPIO_Port, LED4_Pin, (msg.pos & kIndicatorMask4) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, (msg.pos & kIndicatorMask4) ? GPIO_PIN_SET : GPIO_PIN_RESET);
     if (msg.mask & kIndicatorMask5)
       HAL_GPIO_WritePin(LED5_GPIO_Port, LED5_Pin, (msg.pos & kIndicatorMask5) ? GPIO_PIN_SET : GPIO_PIN_RESET);
     if (msg.mask & kIndicatorMask6)
