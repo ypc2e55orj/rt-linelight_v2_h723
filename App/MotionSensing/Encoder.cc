@@ -34,7 +34,7 @@ void Encoder::Reset() {
   std::scoped_lock<Mutex> lock{mtx_};
   for (int i = 0; i < 2; i++) {
     /* 最新値で上書き */
-    last_[i] = GetTimCount(encoders[i], i == 0);
+    last_[i] = GetTimCount(encoders[i], i == 1);
   }
   diff_.fill(0);
 }
@@ -43,7 +43,7 @@ void Encoder::Reset() {
 void Encoder::Update() {
   std::scoped_lock<Mutex> lock{mtx_};
   for (int i = 0; i < 2; i++) {
-    uint16_t curr = GetTimCount(encoders[i], i == 0);
+    uint16_t curr = GetTimCount(encoders[i], i == 1);
     int32_t delta = CalcWheelDelta(curr, last_[i]);
     diff_[i] = static_cast<float>(delta) * kAnglePerPulse;
     last_[i] = curr;

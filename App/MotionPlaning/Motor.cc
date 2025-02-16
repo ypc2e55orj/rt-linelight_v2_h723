@@ -9,7 +9,7 @@
 
 /* グローバル変数定義 */
 extern TIM_HandleTypeDef htim1;
-static uint32_t channels[] = {TIM_CHANNEL_3, TIM_CHANNEL_4, TIM_CHANNEL_1, TIM_CHANNEL_2};
+static uint32_t channels[] = {TIM_CHANNEL_3, TIM_CHANNEL_4, TIM_CHANNEL_2, TIM_CHANNEL_1};
 
 namespace MotionPlaning {
 /* 初期化 */
