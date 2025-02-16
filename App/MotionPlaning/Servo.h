@@ -11,8 +11,7 @@
 namespace MotionPlaning {
 class Servo {
  public:
-  using Voltage = std::array<float, 2>;
-  using Duty = std::array<float, 2>;
+  using ControlAmount = std::array<float, 2>;
 
   /* ゲインを設定 */
   void SetGain(const Pid::Gain &linear, const Pid::Gain &angular);
@@ -32,13 +31,18 @@ class Servo {
   );
 
   /* 設定モーター電圧を取得 */
-  Voltage GetMotorVoltage();
+  ControlAmount GetMotorVoltage();
 
   /* デューティ比を取得 */
-  Duty GetMotorDuty();
+  ControlAmount GetMotorDuty();
 
-  /* 電圧が丸められたかを取得 */
-  bool IsLimited();
+  /* フィードフォワード制御量を取得 */
+  ControlAmount GetFeedForwardAmount();
+  /* フィードバック制御量を取得 */
+  ControlAmount GetFeedBackAmount();
+
+  /* エラーが発生したかを取得 */
+  bool HasError();
 
  private:
   mutable Mutex mtx_;
@@ -49,9 +53,12 @@ class Servo {
   float targetLinear_;
   float targetAngular_;
 
-  Voltage voltage_{};
-  Duty duty_{};
-  bool isLimited_{false};
+  ControlAmount feedforward_{};
+  ControlAmount feedback_{};
+  ControlAmount voltage_{};
+  ControlAmount duty_{};
+
+  bool hasError_;
 };
 }  // namespace MotionPlaning
 #endif  // MOTIONPLANING_SERVO_H_

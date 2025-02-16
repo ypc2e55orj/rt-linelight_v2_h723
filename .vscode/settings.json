@@ -3,5 +3,6 @@
         "stmicroelectronics.stm32-vscode-extension": [
             "workspace"
         ]
-    }
+    },
+    "C_Cpp.autoAddFileAssociations": false,
 }
