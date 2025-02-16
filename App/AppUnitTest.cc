@@ -3,7 +3,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-variable"
 
-#define UNIT_TEST_LINESENSING
+#define UNIT_TEST_MOTOR
 
 #ifdef APP_UNIT_TEST
 #if defined(UNIT_TEST_UI)
@@ -198,6 +198,33 @@ extern "C" void vAPP_TaskEntry() {
           auto gyro = imu.GetGyroRaw();
           printf("%ld, %d, %d, %d, %d, %d, %d\r\n", HAL_GetTick(), gyro[0], gyro[1], gyro[2], acc[0], acc[1], acc[2]);
         }
+      }
+    }
+  }
+}
+#elif defined(UNIT_TEST_MOTOR)
+/**
+ * MARK: Unit (Motor)
+ */
+#include "MotionPlaning/Motor.h"
+#include "Periodic.h"
+#include "Ui.h"
+
+extern "C" void vAPP_TaskEntry() {
+  uint32_t notify = 0;
+  uint32_t count = 0;
+  Ui::Instance().Initialize();
+  if (!Periodic::Instance().Initialize()) {
+    Ui::Instance().Fatal();
+  }
+  Periodic::Instance().Add(xTaskGetCurrentTaskHandle());
+  auto &motor = MotionPlaning::Motor::Instance();
+  motor.Initialize();
+  motor.Enable();
+  motor.SetDuty({0.2, 0.2});
+  while (true) {
+    if (xTaskNotifyWait(0, kTaskNotifyBitMask, &notify, portMAX_DELAY) == pdTRUE) {
+      if (notify & kTaskNotifyBitPeriodic) {
       }
     }
   }
