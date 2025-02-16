@@ -11,7 +11,7 @@
 #include <cstdio>
 #include <cstring>
 
-using LineState = LineSensing::Line::State;
+using LineState = LineSensing::LineImpl::State;
 using Landmark = MotionPlaning::PositionCorrector::Landmark;
 
 /* コンストラクタ */
@@ -20,12 +20,12 @@ Trace::Trace() : velocityMap_(radiusExplorer_) {
   ls_ = &LineSensing::LineSensing::Instance();
   mp_ = &MotionPlaning::MotionPlaning::Instance();
   ui_ = &Ui::Instance();
-  servo_ = &MotionPlaning::MotionPlaning::Instance().GetServo();
+  servo_ = &MotionPlaning::MotionPlaning::Instance().Servo();
   suction_ = &MotionPlaning::Suction::Instance();
-  odometry_ = &MotionSensing::MotionSensing::Instance().GetOdometry();
-  line_ = &LineSensing::LineSensing::Instance().GetLine();
-  marker_ = &LineSensing::LineSensing::Instance().GetMarker();
-  power_ = &PowerMonitoring::PowerMonitoring::Instance().GetPower();
+  odometry_ = &MotionSensing::MotionSensing::Instance().Odometry();
+  line_ = &LineSensing::LineSensing::Instance().Line();
+  marker_ = &LineSensing::LineSensing::Instance().Marker();
+  power_ = &PowerMonitoring::PowerMonitoring::Instance().Power();
   fram_ = &Fram::Instance();
 }
 

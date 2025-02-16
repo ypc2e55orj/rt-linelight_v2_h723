@@ -81,7 +81,7 @@ static void Initialize() {
  * 起動時の電圧確認
  */
 static void ShowBatteryVoltage() {
-  auto &power = PowerMonitoring::PowerMonitoring::Instance().GetPower();
+  auto &power = PowerMonitoring::PowerMonitoring::Instance().Power();
   auto &ui = Ui::Instance();
   auto volt = power.GetBatteryVoltageAverage();
   if (volt < kBatteryVoltageLimitMin) {
@@ -210,7 +210,7 @@ extern "C" void vAPP_TaskEntry() {
         trace.PrintPositionCorrectorLog();
       } break;
       case 0x0c: {
-        auto &line = LineSensing::LineSensing::Instance().GetLine();
+        auto &line = LineSensing::LineSensing::Instance().Line();
         auto offset = line.GetOffset();
         fputc(2, stdout);
         for (uint32_t order = 0; order < 16; order++) {

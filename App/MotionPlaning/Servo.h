@@ -9,7 +9,7 @@
 #include "Wrapper/Mutex.h"
 
 namespace MotionPlaning {
-class Servo {
+class ServoImpl {
  public:
   using ControlAmount = std::array<float, 2>;
 

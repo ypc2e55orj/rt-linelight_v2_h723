@@ -83,7 +83,7 @@ class Trace : public Singleton<Trace> {
 #pragma pack(push, 1)
   struct Log {
     uint32_t time;
-    LineSensing::Line::State line;
+    LineSensing::LineImpl::State line;
     float commandVelocity;
     float estimateVelocity;
     float expectTranslate;
@@ -116,12 +116,12 @@ class Trace : public Singleton<Trace> {
   Ui *ui_{nullptr};
   Fram *fram_{nullptr};
 
-  const PowerMonitoring::Power *power_{nullptr};
+  const PowerMonitoring::PowerImpl *power_{nullptr};
   MotionPlaning::Suction *suction_{nullptr};
-  MotionPlaning::Servo *servo_{nullptr};
-  MotionSensing::Odometry *odometry_{nullptr};
-  const LineSensing::Line *line_{nullptr};
-  const LineSensing::Marker *marker_{nullptr};
+  MotionPlaning::ServoImpl *servo_{nullptr};
+  MotionSensing::OdometryImpl *odometry_{nullptr};
+  const LineSensing::LineImpl *line_{nullptr};
+  const LineSensing::MarkerImpl *marker_{nullptr};
 
   /* 走行パラメータ */
   Parameter param_{};

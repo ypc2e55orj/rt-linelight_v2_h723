@@ -25,7 +25,7 @@
 static void TestVelocityMeasure() {
   MotionSensing::MotionSensing::Instance().NotifyStart();
   auto &ui = Ui::Instance();
-  auto &odometry = MotionSensing::MotionSensing::Instance().GetOdometry();
+  auto &odometry = MotionSensing::MotionSensing::Instance().Odometry();
   auto xLastWakeTime = xTaskGetTickCount();
   while (true) {
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1000));
@@ -46,7 +46,7 @@ static void TestVelocityMeasure() {
 /* 宴会芸テスト */
 static void TestEnkaigei() {
   auto &ui = Ui::Instance();
-  auto &servo = MotionPlaning::MotionPlaning::Instance().GetServo();
+  auto &servo = MotionPlaning::MotionPlaning::Instance().Servo();
   servo.SetGain({0.0f, 0.00f, 0.0f}, {0.3f, 0.0f, 0.0f});
 
   MotionPlaning::MotionPlaning::Instance().NotifyStart();
@@ -89,9 +89,9 @@ static void TestStraight() {
   uint32_t t = 0;
   SlopeVelocityGenerator generator;
   SlopeVelocityGenerator::Profile profile = {0.0f, 2.0f, 0.0f, 10.0f, -10.0f, 1.0f};
-  auto &odometry = MotionSensing::MotionSensing::Instance().GetOdometry();
-  auto &servo = MotionPlaning::MotionPlaning::Instance().GetServo();
-  auto &power = PowerMonitoring::PowerMonitoring::Instance().GetPower();
+  auto &odometry = MotionSensing::MotionSensing::Instance().Odometry();
+  auto &servo = MotionPlaning::MotionPlaning::Instance().Servo();
+  auto &power = PowerMonitoring::PowerMonitoring::Instance().Power();
   auto &fram = Fram::Instance();
   auto &ui = Ui::Instance();
 
@@ -164,9 +164,9 @@ static void TestTurn() {
                                              static_cast<float>(M_PI),
                                              -1.0f * static_cast<float>(M_PI),
                                              static_cast<float>(M_PI) * 2.0f};
-  auto &odometry = MotionSensing::MotionSensing::Instance().GetOdometry();
-  auto &servo = MotionPlaning::MotionPlaning::Instance().GetServo();
-  auto &power = PowerMonitoring::PowerMonitoring::Instance().GetPower();
+  auto &odometry = MotionSensing::MotionSensing::Instance().Odometry();
+  auto &servo = MotionPlaning::MotionPlaning::Instance().Servo();
+  auto &power = PowerMonitoring::PowerMonitoring::Instance().Power();
   auto &fram = Fram::Instance();
   auto &ui = Ui::Instance();
 
@@ -220,8 +220,8 @@ static void TestTurn() {
 /* ラインセンサーテスト */
 static void TestLineMark() {
   auto &ui = Ui::Instance();
-  auto &line = LineSensing::LineSensing::Instance().GetLine();
-  auto &marker = LineSensing::LineSensing::Instance().GetMarker();
+  auto &line = LineSensing::LineSensing::Instance().Line();
+  auto &marker = LineSensing::LineSensing::Instance().Marker();
 
   LineSensing::LineSensing::Instance().NotifyStart();
   auto xLastWakeTime = xTaskGetTickCount();
@@ -241,8 +241,8 @@ static void TestLineMark() {
 /* ラインセンサー生値テスト */
 static void TestLineRaw() {
   auto &ui = Ui::Instance();
-  auto &line = LineSensing::LineSensing::Instance().GetLine();
-  LineSensing::Line::Raw raw{};
+  auto &line = LineSensing::LineSensing::Instance().Line();
+  LineSensing::LineImpl::Raw raw{};
   LineSensing::LineSensing::Instance().NotifyStart();
   auto xLastWakeTime = xTaskGetTickCount();
   while (true) {
@@ -291,8 +291,8 @@ static void TestTaskList() {
 /* ラインセンサーの値を収集 */
 static void TestCollectLineSensor() {
   auto &ui = Ui::Instance();
-  auto &line = LineSensing::LineSensing::Instance().GetLine();
-  LineSensing::Line::Raw raw{};
+  auto &line = LineSensing::LineSensing::Instance().Line();
+  LineSensing::LineImpl::Raw raw{};
 
   LineSensing::LineSensing::Instance().NotifyStart();
   auto xLastWakeTime = xTaskGetTickCount();
@@ -358,7 +358,7 @@ static void TestFramDumpAll() {
 /* 吸引ファンテスト */
 static void TestSuctionFan() {
   auto &ui = Ui::Instance();
-  auto &power = PowerMonitoring::PowerMonitoring::Instance().GetPower();
+  auto &power = PowerMonitoring::PowerMonitoring::Instance().Power();
   auto &suction = MotionPlaning::Suction::Instance();
 
   suction.Enable();

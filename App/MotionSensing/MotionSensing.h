@@ -18,14 +18,14 @@ class MotionSensing final : public Task<MotionSensing> {
   bool CalibrateImu(int32_t sampleNum);
 
   /* オドメトリを取得 */
-  Odometry &GetOdometry() { return odometry_; }
+  OdometryImpl &Odometry() { return odometry_; }
 
  protected:
   /* タスク */
   void TaskEntry() final;
 
  private:
-  Odometry odometry_;
+  OdometryImpl odometry_;
 };
 }  // namespace MotionSensing
 #endif  // MOTIONSENSING_MOTIONSENSING_H_

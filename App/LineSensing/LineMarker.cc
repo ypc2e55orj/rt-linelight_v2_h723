@@ -71,7 +71,7 @@ void SideMarker::SetIgnore(float distance) {
  */
 
 /* リセット */
-void Marker::Reset() {
+void MarkerImpl::Reset() {
   std::scoped_lock<Mutex> lock(mtx_);
   for (uint32_t order = 0; order < MarkerAdc::kNum; order++) {
     markers_[order].Reset();
@@ -79,7 +79,7 @@ void Marker::Reset() {
 }
 
 /* 更新 */
-bool Marker::Update(float distance) {
+bool MarkerImpl::Update(float distance) {
   auto &adc = MarkerAdc::Instance();
   if (!adc.Fetch()) {
     return false;
@@ -95,7 +95,7 @@ bool Marker::Update(float distance) {
 }
 
 /* 閾値を設定 */
-void Marker::SetThreshold(const Max &mx) {
+void MarkerImpl::SetThreshold(const Max &mx) {
   std::scoped_lock<Mutex> lock(mtx_);
   for (uint32_t order = 0; order < MarkerAdc::kNum; order++) {
     markers_[order].SetThreshold(mx[order] * kMarkerDetectThreshold);
@@ -103,7 +103,7 @@ void Marker::SetThreshold(const Max &mx) {
 }
 
 /* 無視開始距離を設定 */
-void Marker::SetIgnore(float distance) {
+void MarkerImpl::SetIgnore(float distance) {
   std::scoped_lock<Mutex> lock(mtx_);
   for (uint32_t order = 0; order < MarkerAdc::kNum; order++) {
     markers_[order].SetIgnore(distance);
@@ -111,7 +111,7 @@ void Marker::SetIgnore(float distance) {
 }
 
 /* 状態を取得 */
-Marker::State Marker::GetState() const {
+MarkerImpl::State MarkerImpl::GetState() const {
   std::scoped_lock<Mutex> lock(mtx_);
   State state{};
   for (uint32_t order = 0; order < MarkerAdc::kNum; order++) {
@@ -121,7 +121,7 @@ Marker::State Marker::GetState() const {
 }
 
 /* 検出回数を取得 */
-Marker::Count Marker::GetCount() const {
+MarkerImpl::Count MarkerImpl::GetCount() const {
   std::scoped_lock<Mutex> lock(mtx_);
   Count count{};
   for (uint32_t order = 0; order < MarkerAdc::kNum; order++) {
@@ -131,7 +131,7 @@ Marker::Count Marker::GetCount() const {
 }
 
 /* 検出開始距離を取得 */
-Marker::DetectDistance Marker::GetDetectDistance() const {
+MarkerImpl::DetectDistance MarkerImpl::GetDetectDistance() const {
   std::scoped_lock<Mutex> lock(mtx_);
   DetectDistance distance{};
   for (uint32_t order = 0; order < MarkerAdc::kNum; order++) {
@@ -141,27 +141,27 @@ Marker::DetectDistance Marker::GetDetectDistance() const {
 }
 
 /* スタートしたか */
-bool Marker::IsStarted() const { return markers_[0].GetCount() > 0; }
+bool MarkerImpl::IsStarted() const { return markers_[0].GetCount() > 0; }
 
 /* ゴールしたか */
-bool Marker::IsGoaled() const { return markers_[0].GetCount() > 1; }
+bool MarkerImpl::IsGoaled() const { return markers_[0].GetCount() > 1; }
 
 /* 曲率マーカーがあったか */
-bool Marker::IsCurvature() const { return markers_[1].GetState() == SideMarker::State::kPassed; };
+bool MarkerImpl::IsCurvature() const { return markers_[1].GetState() == SideMarker::State::kPassed; };
 
 /**
  * MARK: Line
  */
 
 /* リセット */
-void Line::Reset() {
+void LineImpl::Reset() {
   std::scoped_lock<Mutex> lock(mtx_);
   state_ = State::kNormal;
   errorAngleAverage_.Reset();
 }
 
 /* 更新 */
-bool Line::Update(float distance) {
+bool LineImpl::Update(float distance) {
   auto &adc = LineAdc::Instance();
   if (!adc.Fetch()) {
     {
@@ -218,7 +218,7 @@ bool Line::Update(float distance) {
 }
 
 /* 閾値を設定 */
-void Line::SetThreshold(const Max &mx) {
+void LineImpl::SetThreshold(const Max &mx) {
   std::scoped_lock<Mutex> lock(mtx_);
   for (uint32_t order = 0; order < LineAdc::kNum; order++) {
     threshold_[order] = mx[order] * kLineDetectThreshold;
@@ -226,34 +226,34 @@ void Line::SetThreshold(const Max &mx) {
 }
 
 /* オフセットを設定 */
-void Line::SetOffset(const Offset &of) {
+void LineImpl::SetOffset(const Offset &of) {
   std::scoped_lock<Mutex> lock(mtx_);
   std::copy(of.begin(), of.end(), offset_.begin());
 }
 
 /* オフセットを取得 */
-Line::Offset Line::GetOffset() const {
+LineImpl::Offset LineImpl::GetOffset() const {
   std::scoped_lock<Mutex> lock(mtx_);
   return offset_;
 }
 
 /* 生値を取得 */
-void Line::GetRaw(Raw &raw) const {
+void LineImpl::GetRaw(Raw &raw) const {
   std::scoped_lock<Mutex> lock(mtx_);
   raw = rawLast_;
 }
 
 /* 状態を取得 */
-Line::State Line::GetState() const { return state_; }
+LineImpl::State LineImpl::GetState() const { return state_; }
 
 /* 反応センサーの個数を取得 */
-uint8_t Line::GetDetectNum() const { return detectNum_; }
+uint8_t LineImpl::GetDetectNum() const { return detectNum_; }
 
 /* 反応センサーの位置を取得 */
-uint16_t Line::GetDetectPos() const { return detectPos_; }
+uint16_t LineImpl::GetDetectPos() const { return detectPos_; }
 
 /* エラー角度を取得 */
-float Line::GetErrorAngle() const {
+float LineImpl::GetErrorAngle() const {
   std::scoped_lock<Mutex> lock(mtx_);
 
   switch (state_) {
@@ -268,13 +268,13 @@ float Line::GetErrorAngle() const {
 }
 
 /* ラインがないか */
-bool Line::IsNone() const { return state_ == State::kNone; }
+bool LineImpl::IsNone() const { return state_ == State::kNone; }
 
 /* 交差か */
-bool Line::IsCrossPassed() const { return state_ == State::kCrossPassed; }
+bool LineImpl::IsCrossPassed() const { return state_ == State::kCrossPassed; }
 
 /* ラインとのエラー角度を計算 */
-float Line::CalculateErrorAngle(const Value &v) {
+float LineImpl::CalculateErrorAngle(const Value &v) {
   float diff = 0.0f;
   for (uint32_t order = 0; order < 8; order++) {
     diff += (v[order] - v[order + 8]) * static_cast<float>(order + 1) / 8.0f;

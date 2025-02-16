@@ -14,14 +14,14 @@ class PowerMonitoring final : public Task<PowerMonitoring> {
   bool Initialize();
 
   /* 状態を取得 */
-  const Power &GetPower() { return power_; }
+  const PowerImpl &Power() { return power_; }
 
  protected:
   /* タスク */
   void TaskEntry() final;
 
  private:
-  Power power_;
+  PowerImpl power_;
 };
 }  // namespace PowerMonitoring
 #endif  // POWERMONITORING_POWERMONITORING_H_

@@ -9,10 +9,10 @@
 
 namespace MotionSensing {
 /* コンストラクタ */
-Odometry::Odometry() { Reset(); }
+OdometryImpl::OdometryImpl() { Reset(); }
 
 /* リセット */
-void Odometry::Reset() {
+void OdometryImpl::Reset() {
   std::scoped_lock<Mutex> lock(mtx_);
   deltaDispTrans_ = 0.0f;
   acc_ = {}, vel_ = {}, dis_ = {}, pose_ = {};
@@ -20,7 +20,7 @@ void Odometry::Reset() {
 }
 
 /* オドメトリ・デッドレコニングを更新 */
-void Odometry::Update(float wheelDeltaAngleRight, /* エンコーダーから取得した車輪変化角度(右) [rad] */
+void OdometryImpl::Update(float wheelDeltaAngleRight, /* エンコーダーから取得した車輪変化角度(右) [rad] */
                       float wheelDeltaAngleLeft, /* エンコーダーから取得した車輪変化角度(左) [rad] */
                       float accelY,              /* IMUから取得したy軸加速度 [m/ss] */
                       float yawRate              /* IMUから取得したz軸角速度 [rad/s] */
@@ -42,28 +42,28 @@ void Odometry::Update(float wheelDeltaAngleRight, /* エンコーダーから取
 }
 
 /* 周期での変位距離を取得 */
-float Odometry::GetDisplacementTranslateDelta() const { return deltaDispTrans_; }
+float OdometryImpl::GetDisplacementTranslateDelta() const { return deltaDispTrans_; }
 
 /* 加速度を取得 */
-Polar Odometry::GetAcceleration() const {
+Polar OdometryImpl::GetAcceleration() const {
   std::scoped_lock<Mutex> lock(mtx_);
   return acc_;
 }
 
 /* 速度を取得 */
-Polar Odometry::GetVelocity() const {
+Polar OdometryImpl::GetVelocity() const {
   std::scoped_lock<Mutex> lock(mtx_);
   return vel_;
 }
 
 /* 変位を取得 */
-Polar Odometry::GetDisplacement() const {
+Polar OdometryImpl::GetDisplacement() const {
   std::scoped_lock<Mutex> lock(mtx_);
   return dis_;
 }
 
 /* 姿勢を取得 */
-Pose Odometry::GetPose() const {
+Pose OdometryImpl::GetPose() const {
   std::scoped_lock<Mutex> lock(mtx_);
   return pose_;
 }

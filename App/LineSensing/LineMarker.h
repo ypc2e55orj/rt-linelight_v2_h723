@@ -59,7 +59,7 @@ class SideMarker {
  * MARK: Marker
  */
 
-class Marker {
+class MarkerImpl {
  public:
   static constexpr uint32_t kNum = 2;
 
@@ -106,7 +106,7 @@ class Marker {
 /**
  * MARK: Line
  */
-class Line {
+class LineImpl {
  public:
   static constexpr uint32_t kNum = 16;
 

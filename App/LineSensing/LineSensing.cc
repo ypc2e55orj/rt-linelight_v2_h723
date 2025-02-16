@@ -68,7 +68,7 @@ bool LineSensing::Calibrate(uint32_t sampleNum) {
 /* タスク */
 void LineSensing::TaskEntry() {
   uint32_t notify = 0;
-  auto &odometry = MotionSensing::MotionSensing::Instance().GetOdometry();
+  auto &odometry = MotionSensing::MotionSensing::Instance().Odometry();
   Periodic::Instance().Add(TaskHandle());
   while (true) {
     TaskNotifyWaitStart();

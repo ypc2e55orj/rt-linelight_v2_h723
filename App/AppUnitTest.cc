@@ -145,7 +145,7 @@ extern "C" void vAPP_TaskEntry() {
     Ui::Instance().Fatal();
   }
   printf("\r\n\r\nReset!!\r\n\r\n");
-  auto &power = PowerMonitoring::PowerMonitoring::Instance().GetPower();
+  auto &power = PowerMonitoring::PowerMonitoring::Instance().Power();
   while (true) {
     auto vbatt = power.GetBatteryVoltage();
     auto vbattAvg = power.GetBatteryVoltageAverage();
@@ -261,8 +261,8 @@ extern "C" void vAPP_TaskEntry() {
   ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
   sensing.Calibrate(2500);
 
-  auto &line = sensing.GetLine();
-  LineSensing::Line::Raw raw{};
+  auto &line = sensing.Line();
+  LineSensing::LineImpl::Raw raw{};
   sensing.NotifyStart();
 
   Periodic::Instance().Add(xTaskGetCurrentTaskHandle());
@@ -270,7 +270,7 @@ extern "C" void vAPP_TaskEntry() {
     if (xTaskNotifyWait(0, kTaskNotifyBitMask, &notify, portMAX_DELAY) == pdTRUE) {
       if (notify & kTaskNotifyBitPeriodic) {
         line.GetRaw(raw);
-        for (uint32_t i = 0; i < LineSensing::Line::kNum; i++) {
+        for (uint32_t i = 0; i < LineSensing::LineImpl::kNum; i++) {
           printf("%d, ", raw[i]);
         }
         printf("\r\n");

@@ -18,18 +18,18 @@ class LineSensing final : public Task<LineSensing> {
   bool Calibrate(uint32_t sampleNum);
 
   /* ラインを取得 */
-  const Line &GetLine() { return line_; }
+  const LineImpl &Line() { return line_; }
 
   /* マーカーを取得 */
-  const Marker &GetMarker() { return marker_; }
+  const MarkerImpl &Marker() { return marker_; }
 
  protected:
   /* タスク */
   void TaskEntry() final;
 
  private:
-  Marker marker_;
-  Line line_;
+  MarkerImpl marker_;
+  LineImpl line_;
 };
 }  // namespace LineSensing
 

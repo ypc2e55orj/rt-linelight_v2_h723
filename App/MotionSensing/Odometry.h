@@ -14,10 +14,10 @@ struct Pose {
   float x, y, theta;
 };
 
-class Odometry {
+class OdometryImpl {
  public:
   /* コンストラクタ */
-  Odometry();
+  OdometryImpl();
 
   /* リセット */
   void Reset();

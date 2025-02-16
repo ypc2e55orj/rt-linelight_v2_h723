@@ -10,7 +10,7 @@
 #include <array>
 
 namespace PowerMonitoring {
-class Power {
+class PowerImpl {
  public:
   using MotorCurrent = std::array<float, 2>;
 

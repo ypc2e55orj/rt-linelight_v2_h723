@@ -8,7 +8,7 @@
 
 static uint8_t SelectModeLoop(uint8_t mask, uint8_t prev) {
   auto &ui = Ui::Instance();
-  auto &odometry = MotionSensing::MotionSensing::Instance().GetOdometry();
+  auto &odometry = MotionSensing::MotionSensing::Instance().Odometry();
   uint32_t pressTime = 0;
   float velo = 0.0f;
   uint8_t mode = prev;

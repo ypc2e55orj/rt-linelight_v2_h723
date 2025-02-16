@@ -11,21 +11,21 @@
 
 namespace MotionPlaning {
 /* ゲインを設定 */
-void Servo::SetGain(const Pid::Gain &linear, const Pid::Gain &angular) {
+void ServoImpl::SetGain(const Pid::Gain &linear, const Pid::Gain &angular) {
   std::scoped_lock<Mutex> lock(mtx_);
   pidLinear_.Reset(linear);
   pidAngular_.Reset(angular);
 }
 
 /* 目標値を設定 */
-void Servo::SetTarget(float linear, float angular) {
+void ServoImpl::SetTarget(float linear, float angular) {
   std::scoped_lock<Mutex> lock(mtx_);
   targetLinear_ = linear;
   targetAngular_ = angular;
 }
 
 /* リセット */
-void Servo::Reset() {
+void ServoImpl::Reset() {
   std::scoped_lock<Mutex> lock(mtx_);
   hasError_ = false;
   pidLinear_.Reset();
@@ -33,7 +33,7 @@ void Servo::Reset() {
 }
 
 /* 更新 */
-void Servo::Update(float batteryVoltage, /* バッテリー電圧 [V] */
+void ServoImpl::Update(float batteryVoltage, /* バッテリー電圧 [V] */
                    float measureLinear,  /* 速度 [m/s] */
                    float measureAccel,   /* 加速度 [m/ss] */
                    float measureAngular, /* 角速度 [rad/s] */
@@ -92,28 +92,28 @@ void Servo::Update(float batteryVoltage, /* バッテリー電圧 [V] */
 }
 
 /* 設定モーター電圧を取得 */
-Servo::ControlAmount Servo::GetMotorVoltage() {
+ServoImpl::ControlAmount ServoImpl::GetMotorVoltage() {
   std::scoped_lock<Mutex> lock(mtx_);
   return voltage_;
 }
 
 /* デューティ比を取得 */
-Servo::ControlAmount Servo::GetMotorDuty() {
+ServoImpl::ControlAmount ServoImpl::GetMotorDuty() {
   std::scoped_lock<Mutex> lock(mtx_);
   return duty_;
 }
 
 /* フィードフォワード制御量を取得 */
-Servo::ControlAmount Servo::GetFeedForwardAmount() {
+ServoImpl::ControlAmount ServoImpl::GetFeedForwardAmount() {
   std::scoped_lock<Mutex> lock(mtx_);
   return feedforward_;
 }
 /* フィードバック制御量を取得 */
-Servo::ControlAmount Servo::GetFeedBackAmount() {
+ServoImpl::ControlAmount ServoImpl::GetFeedBackAmount() {
   std::scoped_lock<Mutex> lock(mtx_);
   return feedback_;
 }
 
 /* エラーが発生したか */
-bool Servo::HasError() { return hasError_; }
+bool ServoImpl::HasError() { return hasError_; }
 }  // namespace MotionPlaning

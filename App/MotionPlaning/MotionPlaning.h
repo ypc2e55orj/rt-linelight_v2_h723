@@ -16,14 +16,14 @@ class MotionPlaning final : public Task<MotionPlaning> {
   bool Initialize();
 
   /* サーボを取得 */
-  Servo &GetServo() { return servo_; }
+  ServoImpl &Servo() { return servo_; }
 
  protected:
   /* タスク */
   void TaskEntry() final;
 
  private:
-  Servo servo_;
+  ServoImpl servo_;
 };
 }  // namespace MotionPlaning
 

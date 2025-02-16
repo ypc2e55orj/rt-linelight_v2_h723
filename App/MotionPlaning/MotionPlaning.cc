@@ -24,8 +24,8 @@ bool MotionPlaning::Initialize() {
 void MotionPlaning::TaskEntry() {
   uint32_t notify = 0;
   auto &motor = Motor::Instance();
-  auto &power = PowerMonitoring::PowerMonitoring::Instance().GetPower();
-  auto &odometry = MotionSensing::MotionSensing::Instance().GetOdometry();
+  auto &power = PowerMonitoring::PowerMonitoring::Instance().Power();
+  auto &odometry = MotionSensing::MotionSensing::Instance().Odometry();
   Periodic::Instance().Add(TaskHandle());
   while (true) {
     TaskNotifyWaitStart();

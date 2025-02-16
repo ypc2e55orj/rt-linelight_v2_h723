@@ -8,7 +8,7 @@
 
 namespace PowerMonitoring {
 /* リセット */
-void Power::Reset() {
+void PowerImpl::Reset() {
   std::scoped_lock<Mutex> lock(mtx_);
   batteryVoltageMovingAverage_.Reset();
   batteryVoltage_ = 0.0f;
@@ -18,7 +18,7 @@ void Power::Reset() {
 }
 
 /* 更新 */
-bool Power::Update() {
+bool PowerImpl::Update() {
   auto &adc = PowerAdc::Instance();
   std::array<float, 3> voltage{};
   if (!adc.Fetch()) {
@@ -59,23 +59,23 @@ bool Power::Update() {
 }
 
 /* 電池電圧を取得 */
-float Power::GetBatteryVoltage() const { return batteryVoltage_; }
+float PowerImpl::GetBatteryVoltage() const { return batteryVoltage_; }
 
 /* 電池電圧を取得 */
-float Power::GetBatteryVoltageAverage() const { return batteryVoltageMovingAverage_.Get(); }
+float PowerImpl::GetBatteryVoltageAverage() const { return batteryVoltageMovingAverage_.Get(); }
 
 /* モーター電流を取得 */
-Power::MotorCurrent Power::GetMotorCurrent() const {
+PowerImpl::MotorCurrent PowerImpl::GetMotorCurrent() const {
   std::scoped_lock<Mutex> lock(mtx_);
   return motorCurrent_;
 }
 
 /* 電池エラー連続時間 [ms] を取得 */
-uint32_t Power::GetBatteryErrorTime() const { return batteryErrorCount_; }
+uint32_t PowerImpl::GetBatteryErrorTime() const { return batteryErrorCount_; }
 
 /* ADCエラー連続時間 [ms] を取得 */
-uint32_t Power::GetAdcErrorTime() const { return adcErrorCount_; }
+uint32_t PowerImpl::GetAdcErrorTime() const { return adcErrorCount_; }
 
 /* 更新周期を取得 */
-uint32_t Power::GetTick() const { return diffTick_; }
+uint32_t PowerImpl::GetTick() const { return diffTick_; }
 }  // namespace PowerMonitoring
