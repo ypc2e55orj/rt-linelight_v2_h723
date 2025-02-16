@@ -37,8 +37,8 @@ constexpr float kSuctionFanLimitVoltage = 3.7f;                        /* 吸引
 constexpr uint32_t kEncoderNumMovingAverage = 4; /* エンコーダー移動平均サンプル数 */
 
 /* FF項 */
-constexpr float kFeedForwardLinearGain = 0.0f;  /* 並進方向 TODO: 低速時はない方が良いかも */
-constexpr float kFeedForwardAngularGain = 1.0f; /* 旋回方向 TODO: なんか安定しない 原因を探る */
+constexpr float kFeedForwardLinearGain = 0.0f;  /* 並進方向 TODO: */
+constexpr float kFeedForwardAngularGain = 0.0f; /* 旋回方向 TODO: */
 
 /* 周期通知 (Periodic) */
 constexpr float kPeriodicNotifyInterval = 1.0e-3f; /* センサー更新間隔[s] */
