@@ -45,7 +45,7 @@ void MotionPlaning::TaskEntry() {
         float batteryVoltage = power.GetBatteryVoltage();
         auto acc = odometry.GetAcceleration();
         auto velo = odometry.GetVelocity();
-        servo_.Update(batteryVoltage, velo.trans, acc.trans, velo.rot, acc.rot);
+        servo_.Update(batteryVoltage, velo.trans, velo.rot);
         motor.SetDuty(servo_.GetMotorDuty());
       }
     }

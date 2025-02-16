@@ -28,17 +28,19 @@ void ServoImpl::SetTarget(float linear, float angular) {
 void ServoImpl::Reset() {
   std::scoped_lock<Mutex> lock(mtx_);
   hasError_ = false;
+  targetLinear_ = 0.0f;
+  targetAngular_ = 0.0f;
   pidLinear_.Reset();
   pidAngular_.Reset();
 }
 
 /* 更新 */
 void ServoImpl::Update(float batteryVoltage, /* バッテリー電圧 [V] */
-                   float measureLinear,  /* 速度 [m/s] */
-                   float measureAccel,   /* 加速度 [m/ss] */
-                   float measureAngular, /* 角速度 [rad/s] */
-                   float measureAlpha    /* 角加速度 [rad/ss] */
+                       float measureLinear,  /* 速度 [m/s] */
+                       float measureAngular  /* 角速度 [rad/s] */
 ) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
   static constexpr float K = kTorqueConstant;                                              /* トルク定数 [N*m/A] */
   static constexpr float N = kGearRatio;                                                   /* ギア比 */
   static constexpr float W = kTreadWidth;                                                  /* トレッド幅 [m] */
@@ -51,15 +53,27 @@ void ServoImpl::Update(float batteryVoltage, /* バッテリー電圧 [V] */
 
   /* フィードフォワード制御 */
   /* 要求モーター回転数を計算 */
-  float wheelOmegaRight = kRadPerSecToRpm * (targetLinear_ / R + (W * targetAngular_) / (2.0f * R));
-  float wheelOmegaLeft = kRadPerSecToRpm * (targetLinear_ / R - (W * targetAngular_) / (2.0f * R));
+  {
+    auto a = targetLinear_ / R;
+    auto b = (W * targetAngular_) / (2.0f * R);
+    feedforwardWheelOmega_ = {
+        kRadPerSecToRpm * (a + b),
+        kRadPerSecToRpm * (a - b),
+    };
+  }
   /* 要求電流を計算 */
-  float currentRight = ((R / 2.0f) * (M * measureAccel) + (R / W) * (J * measureAlpha)) / (K * N);
-  float currentLeft = ((R / 2.0f) * (M * measureAccel) - (R / W) * (J * measureAlpha)) / (K * N);
+  // {
+  //   auto a = (R / 2.0f) * M * idealLinearAccel_;
+  //   auto b = (R / W) * (J * idealAngularAccel_);
+  //   feedforwardCurrent_ = {
+  //       (a + b) / (K * N),
+  //       (a - b) / (K * N),
+  //   };
+  // }
   /* FF項を電圧に変換 */
   feedforward_ = {
-      currentRight * kMotorResistance + kMotorBackEmf * wheelOmegaRight,
-      currentLeft * kMotorResistance + kMotorBackEmf * wheelOmegaLeft,
+      kMotorBackEmf * feedforwardWheelOmega_[0],
+      kMotorBackEmf * feedforwardWheelOmega_[1],
   };
 
   /* フィードバック制御 */
@@ -89,6 +103,7 @@ void ServoImpl::Update(float batteryVoltage, /* バッテリー電圧 [V] */
       voltage_[0] / batteryVoltage,
       voltage_[1] / batteryVoltage,
   };
+#pragma GCC diagnostic pop
 }
 
 /* 設定モーター電圧を取得 */
@@ -103,12 +118,15 @@ ServoImpl::ControlAmount ServoImpl::GetMotorDuty() {
   return duty_;
 }
 
-/* フィードフォワード制御量を取得 */
+/* 制御量を取得 */
+ServoImpl::ControlAmount ServoImpl::GetFeedForwardOmega() {
+  std::scoped_lock<Mutex> lock(mtx_);
+  return feedforwardWheelOmega_;
+}
 ServoImpl::ControlAmount ServoImpl::GetFeedForwardAmount() {
   std::scoped_lock<Mutex> lock(mtx_);
   return feedforward_;
 }
-/* フィードバック制御量を取得 */
 ServoImpl::ControlAmount ServoImpl::GetFeedBackAmount() {
   std::scoped_lock<Mutex> lock(mtx_);
   return feedback_;

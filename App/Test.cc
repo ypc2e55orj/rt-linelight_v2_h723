@@ -62,7 +62,7 @@ static void TestEnkaigei() {
     if (++count >= 10) {
       count = 0;
       auto tick = HAL_GetTick();
-      auto ff = servo.GetFeedForwardAmount();
+      auto ff = servo.GetFeedForwardOmega();
       auto fb = servo.GetFeedBackAmount();
       auto v = servo.GetMotorVoltage();
       printf(">t:%ld\n>ffr:%f\n>ffl:%f\n>fbv:%f\n>fbo:%f\n>vr:%f\n>vl:%f\n", tick, ff[0], ff[1], fb[0], fb[1], v[0],
@@ -292,39 +292,31 @@ static void TestTaskList() {
 static void TestCollectLineSensor() {
   auto &ui = Ui::Instance();
   auto &line = LineSensing::LineSensing::Instance().Line();
-  LineSensing::LineImpl::Raw raw{};
-
   LineSensing::LineSensing::Instance().NotifyStart();
+  LineSensing::LineImpl::Raw raw{};
   auto xLastWakeTime = xTaskGetTickCount();
-  fputc(2, stdout);
-  fflush(stdout);
   while (true) {
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(10));
-    uint32_t pressTime = ui.WaitPress(0);
+    uint32_t pressTime = ui.WaitPress();
     if (pressTime >= kButtonLongPressThreshold) {
       ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
       break;
     } else if (pressTime >= kButtonShortPressThreshold) {
       ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
-      fputc(3, stdout);
-      fflush(stdout);
-      ui.WaitPress();
-      ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
       fputc(2, stdout);
       fflush(stdout);
-    }
-
-    line.GetRaw(raw);
-    for (uint32_t order = 0; order < 16; order++) {
-      fprintf(stdout, "%05d", raw[order]);
-      if (order != 15) {
-        fprintf(stdout, ",");
+      line.GetRaw(raw);
+      for (uint32_t order = 0; order < 16; order++) {
+        fprintf(stdout, "%05d", raw[order]);
+        if (order != 15) {
+          fprintf(stdout, ",");
+        }
       }
+      fprintf(stdout, "\n");
+      fputc(3, stdout);
+      fflush(stdout);
     }
-    fprintf(stdout, "\n");
   }
-  fputc(3, stdout);
-  fflush(stdout);
   LineSensing::LineSensing::Instance().NotifyStop();
 }
 /* FRAM ダンプ */

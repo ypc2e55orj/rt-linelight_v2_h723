@@ -10,7 +10,7 @@
 /* ハードウェアの設定 */
 constexpr float kRegulatorVoltage = 3.298f; /* 3.3V レギュレータ電圧[V] */
 constexpr float kMachineWeight = 110.0e-3f; /* 機体重量[kg] */
-constexpr float kWheelDiameter = 23.0e-3f; /* 車輪直径[m] TODO: 測る方法を考える */
+constexpr float kWheelDiameter = 23.0e-3f;  /* 車輪直径[m] TODO: 測る方法を考える */
 /* MEMO: 長い直尺の横を走らせて走行距離と内部計算値の差で補正 */
 constexpr float kWheelRadius = kWheelDiameter / 2.0f; /* 車輪半径[m] */
 constexpr float kGearRatio = 42.0f / 11.0f;           /* ギア比[spur/pinion] */
@@ -44,11 +44,11 @@ constexpr float kFeedForwardAngularGain = 1.0f; /* 旋回方向 TODO: なんか�
 constexpr float kPeriodicNotifyInterval = 1.0e-3f; /* センサー更新間隔[s] */
 
 /* ラインセンサー */
-constexpr uint32_t kLineNumCalibrationSample = 5000; /* ラインセンサーキャリブレーション時間[ms] */
-constexpr uint32_t kLineNumErrorMovingAverage = 32; /* ラインセンサーエラー角度移動平均サンプル数 */
-constexpr uint8_t kLineCrossDetectNum = 8;          /* ラインセンサー交差とする反応センサ個数 */
-constexpr float kLineDistanceFromCenter = 81.04e-3f; /* ラインセンサーから車軸までの距離[m] */
-constexpr float kLineDistanceFromMarker = 49.63e-3f; /* ラインセンサーからマーカーセンサーまでの距離[m] */
+constexpr uint32_t kLineNumCalibrationSample = 5000;   /* ラインセンサーキャリブレーション時間[ms] */
+constexpr uint32_t kLineNumErrorMovingAverage = 32;    /* ラインセンサーエラー角度移動平均サンプル数 */
+constexpr uint8_t kLineCrossDetectNum = 8;             /* ラインセンサー交差とする反応センサ個数 */
+constexpr float kLineDistanceFromCenter = 81.04e-3f;   /* ラインセンサーから車軸までの距離[m] */
+constexpr float kLineDistanceFromMarker = 49.63e-3f;   /* ラインセンサーからマーカーセンサーまでの距離[m] */
 constexpr float kLineToDistCoeff = 0.027397009f;       /* ラインセンサー横ずれ距離変換 係数 */
 constexpr float kLineToDistIntercept = -0.0011686919f; /* ラインセンサー横ずれ距離変換 切片 */
 constexpr float kLineErrorAngleLimit = 0.17453292f;    /* ラインセンサーエラー角度上限[rad] */

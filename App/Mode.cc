@@ -21,7 +21,7 @@ static uint8_t SelectModeLoop(uint8_t mask, uint8_t prev) {
     velo = odometry.GetVelocity().trans;
 
     /* モード仮確定 */
-    if (mode != 0 && pressTime >= kButtonLongPressThreshold) {
+    if (mode != 0 && pressTime >= kButtonShortPressThreshold) {
       ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
       bool blink = false;
       while (true) {

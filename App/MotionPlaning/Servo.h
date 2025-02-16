@@ -25,9 +25,7 @@ class ServoImpl {
   /* 更新 */
   void Update(float batteryVoltage, /* バッテリー電圧 [V] */
               float measureLinear,  /* 速度 [m/s] */
-              float measureAccel,   /* 加速度 [m/ss] */
-              float measureAngular, /* 角速度 [rad/s] */
-              float measureAlpha    /* 角加速度 [rad/ss] */
+              float measureAngular  /* 角速度 [rad/s] */
   );
 
   /* 設定モーター電圧を取得 */
@@ -36,9 +34,10 @@ class ServoImpl {
   /* デューティ比を取得 */
   ControlAmount GetMotorDuty();
 
-  /* フィードフォワード制御量を取得 */
+  /* 制御量を取得 */
+  ControlAmount GetFeedForwardOmega();
+  ControlAmount GetFeedForwardCurrent();
   ControlAmount GetFeedForwardAmount();
-  /* フィードバック制御量を取得 */
   ControlAmount GetFeedBackAmount();
 
   /* エラーが発生したかを取得 */
@@ -52,6 +51,8 @@ class ServoImpl {
 
   float targetLinear_;
   float targetAngular_;
+
+  ControlAmount feedforwardWheelOmega_{};
 
   ControlAmount feedforward_{};
   ControlAmount feedback_{};
