@@ -1,6 +1,9 @@
 #ifndef LINESENSING_LINESENSING_H_
 #define LINESENSING_LINESENSING_H_
 
+/* STM32CubeMX */
+#include <main.h>
+
 /* Projects */
 #include "LineMarker.h"
 #include "Wrapper/Task.h"
@@ -30,6 +33,14 @@ class LineSensing final : public Task<LineSensing> {
  private:
   MarkerImpl marker_;
   LineImpl line_;
+
+  /* IR LED点灯待ち */
+  static void PeriodElapsedCallback(TIM_HandleTypeDef *);
+  StaticSemaphore_t periodElapsedSemphrBuffer_;
+  SemaphoreHandle_t periodElapsedSemphr_; /* 立ち上がり待ちセマフォ */
+
+  bool TurnOnIrLed();
+  void TurnOffIrLed();
 };
 }  // namespace LineSensing
 

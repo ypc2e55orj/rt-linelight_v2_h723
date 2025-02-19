@@ -135,96 +135,98 @@ extern "C" void vAPP_TaskEntry() {
     mode = SelectMode(0x1f, mode);
     switch (mode) {
       case 0x01: {
+        /* 探索走行(非吸引で確実に走る速度、位置精度を向上させるために一応吸う) */
+        /* TODO: 加速度を上げる */
         Trace::Parameter param = {
             Trace::Mode::kExploreRunning, /* モード */
             10,                           /* ログ周期 [ms] */
-            1.0f,                         /* 探索速度[m/s] */
+            1.2f,                         /* 探索速度[m/s] */
             1.0f,                         /* 加速度 [m/ss] */
             {5.0f, 0.01f, 0.0f},          /* 並進PIDゲイン */
-            {0.3f, 0.05f, 0.0f},          /* 旋回PIDゲイン */
-            {26.0f, 0.0f, 0.02f},         /* ライン追従PIDゲイン */
+            {0.6f, 0.02f, 0.0f},          /* 旋回PIDゲイン */
+            {7.0f, 0.0f, 0.01f},          /* ライン追従PIDゲイン */
             0.1f,                         /* ゴールマーカーから停止までの距離 [m] */
-            1.0f,                         /* 吸引電圧 [V] */
+            2.0f,                         /* 吸引電圧 [V] */
         };
         trace.Run(param);
       } break;
       case 0x02: {
+      } break;
+      case 0x03: {
+      } break;
+      case 0x04: {
+      } break;
+      case 0x05: {
+      } break;
+      case 0x06: {
+      } break;
+      case 0x07: {
+        /* 最短走行(吸引で確実に走る速度、最短走行が成功しない場合にタイムを縮めるために使用) */
+        /* TODO: 加速度を上げる */
         Trace::Parameter param = {
             Trace::Mode::kExploreRunning, /* モード */
             10,                           /* ログ周期 [ms] */
             1.5f,                         /* 探索速度[m/s] */
-            5.0f,                         /* 加速度 [m/ss] */
+            1.0f,                         /* 加速度 [m/ss] */
             {5.0f, 0.01f, 0.0f},          /* 並進PIDゲイン */
-            {0.3f, 0.05f, 0.0f},          /* 旋回PIDゲイン */
-            {26.0f, 0.0f, 0.02f},         /* ライン追従PIDゲイン */
+            {0.6f, 0.02f, 0.0f},          /* 旋回PIDゲイン */
+            {7.0f, 0.0f, 0.01f},          /* ライン追従PIDゲイン */
             0.1f,                         /* ゴールマーカーから停止までの距離 [m] */
-            2.5f,                         /* 吸引電圧 [V] */
+            2.0f,                         /* 吸引電圧 [V] */
         };
         trace.Run(param);
       } break;
-      case 0x03: {
+      case 0x08: {
+        /* (これを本番で使うことはない)最短用ゲイン調整用 */
+        Trace::Parameter param = {
+            Trace::Mode::kExploreRunning, /* モード */
+            1,                            /* ログ周期 [ms] */
+            2.0f,                         /* 探索速度[m/s] */
+            10.0f,                        /* 加速度 [m/ss] */
+            {9.0f, 0.01f, 0.0f},          /* 並進PIDゲイン */
+            {0.8f, 0.02f, 0.0f},          /* 旋回PIDゲイン */
+            {13.0f, 0.0f, 0.01f},         /* ライン追従PIDゲイン */
+            0.1f,                         /* ゴールマーカーから停止までの距離 [m] */
+            3.0f,                         /* 吸引電圧 [V] */
+        };
+        trace.Run(param);
+      } break;
+      case 0x09: {
+        /* (これを本番で使うことはない)最短走行アルゴリズム調整用 */
         Trace::Parameter param = {
             Trace::Mode::kFastRunning, /* モード */
             5,                         /* ログ周期 [ms] */
             1.0f,                      /* 開始速度[m/s] */
             5.0f,                      /* 加速度 [m/ss] */
             {5.0f, 0.01f, 0.0f},       /* 並進PIDゲイン */
-            {0.3f, 0.05f, 0.0f},       /* 旋回PIDゲイン */
-            {26.0f, 0.0f, 0.02f},      /* ライン追従PIDゲイン */
+            {0.6f, 0.02f, 0.0f},       /* 旋回PIDゲイン */
+            {7.0f, 0.0f, 0.01f},       /* ライン追従PIDゲイン */
             0.1f,                      /* ゴールマーカーから停止までの距離 [m] */
-            3.0f,                      /* 吸引電圧 [V] */
+            0.0f,                      /* 吸引電圧 [V] */
         };
         std::vector<Trace::RadiusVelocityLimit> limits{
-            {0.2f, 1.2f}, {0.4f, 1.4f}, {0.6f, 1.6f}, {0.8f, 1.8f}, {1.0f, 2.0f},
+            {0.2f, 0.6f}, /* <R20 , 0.6m/s */
+            {0.4f, 0.7f}, /* <R40 , 0.7m/s */
+            {0.6f, 0.8f}, /* <R60 , 0.8m/s */
+            {0.8f, 0.9f}, /* <R80 , 0.9m/s */
+            {1.0f, 1.0f}, /* <R100, 1.0m/s */
         };
-        // Trace::Parameter param = {
-        //     Trace::Mode::kFastRunning, /* モード */
-        //     10,                        /* ログ周期 [ms] */
-        //     0.6f,                      /* 開始速度[m/s] */
-        //     1.0f,                      /* 加速度 [m/ss] */
-        //     {5.0f, 0.01f, 0.0f},       /* 並進PIDゲイン */
-        //     {0.3f, 0.05f, 0.0f},       /* 旋回PIDゲイン */
-        //     {26.0f, 0.0f, 0.02f},      /* ライン追従PIDゲイン */
-        //     0.1f,                      /* ゴールマーカーから停止までの減速距離 [m] */
-        //     0.0f,                      /* 吸引電圧 [V] */
-        // };
-        // std::vector<Trace::RadiusVelocityLimit> limits{
-        //     {0.2f, 0.6f}, /* <R20 , 0.6m/s */
-        //     {0.4f, 0.7f}, /* <R40 , 0.7m/s */
-        //     {0.6f, 0.8f}, /* <R60 , 0.8m/s */
-        //     {0.8f, 0.9f}, /* <R80 , 0.9m/s */
-        //     {1.0f, 1.0f}, /* <R100, 1.0m/s */
         trace.CalculateVelocityMap(limits, param.limitVelocity, param.acceleration, param.acceleration, 10);
-        trace.Run(param);
+        // trace.Run(param);
       } break;
-      case 0x08:
+      case 0x0a:
         trace.PrintLog();
         break;
-      case 0x09:
+      case 0x0b:
         trace.PrintRadiusExplorerLog();
         break;
-      case 0x0a: {
+      case 0x0c: {
         trace.PrintRadiusVelocityLog();
       } break;
-      case 0x0b: {
+      case 0x0d: {
         trace.PrintPositionCorrectorLog();
       } break;
-      case 0x0c: {
-        auto &line = LineSensing::LineSensing::Instance().Line();
-        auto offset = line.GetOffset();
-        fputc(2, stdout);
-        for (uint32_t order = 0; order < 16; order++) {
-          printf("%f", static_cast<double>(offset[order]));
-          if (order < 15) {
-            fputc(',', stdout);
-          } else {
-            fputc('\n', stdout);
-          }
-        }
-        fputc(3, stdout);
-        fflush(stdout);
-      } break;
-      case 0x0f:
+      case 0x0e:
         trace.PrintLog(true);
         break;
       case 0x1f:

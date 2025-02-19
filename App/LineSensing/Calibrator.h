@@ -24,15 +24,19 @@ concept AdcClass = requires(T &t) {
 template <AdcClass Adc>
 class Calibrator {
  public:
-  using Offset = std::array<float, Adc::kNum>;
+  using Coeff = std::array<float, Adc::kNum>;
   using Max = std::array<uint16_t, Adc::kNum>;
+  using Min = std::array<uint16_t, Adc::kNum>;
 
-  explicit Calibrator(Adc &adc) : adc_(adc) {}
+  explicit Calibrator(Adc &adc) : adc_(adc) {
+    for (uint32_t num = 0; num < Adc::kNum; num++) {
+      min_[num] = UINT16_MAX;
+      max_[num] = 0;
+    }
+  }
 
   /* 更新 */
   bool Fetch() {
-    std::array<uint16_t, Adc::kNum> sortBuffer = {};
-
     if (!adc_.Fetch()) {
       return false;
     }
@@ -41,35 +45,32 @@ class Calibrator {
     for (uint32_t num = 0; num < Adc::kNum; num++) {
       uint16_t raw = adc_.GetRaw(num);
       max_[num] = std::max(max_[num], raw);
-      sortBuffer[num] = raw;
+      min_[num] = std::min(min_[num], raw);
     }
-    /* 最大の中央値を算出 */
-    std::sort(sortBuffer.begin(), sortBuffer.end());
-    float median = Adc::kNum % 2 == 0 ? (sortBuffer[Adc::kNum / 2 - 1] + sortBuffer[Adc::kNum / 2]) / 2.0f
-                                      : sortBuffer[Adc::kNum / 2];
-    medianMax_ = std::max(medianMax_, median);
-
     return true;
   }
 
   /* 計算 */
   void Calculate() {
     for (uint32_t num = 0; num < Adc::kNum; num++) {
-      offset_[num] = std::log(static_cast<float>(max_[num]) / medianMax_);
+      coeff_[num] = 1 / static_cast<float>(max_[num] - min_[num]);
     }
   }
+
+  /* 係数を取得 */
+  const Coeff &GetCoeff() { return coeff_; }
 
   /* 最大値を取得 */
   const Max &GetMax() { return max_; }
 
-  /* オフセットを取得 */
-  const Offset &GetOffset() { return offset_; }
+  /* 最小値を取得 (フォトリフレクタの漏れ電流分) */
+  const Min &GetMin() { return min_; }
 
  private:
   Adc &adc_;
-  float medianMax_{};
+  Coeff coeff_{};
   Max max_{};
-  Offset offset_{};
+  Min min_{};
 };
 }  // namespace LineSensing
 

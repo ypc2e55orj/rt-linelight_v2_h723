@@ -295,7 +295,7 @@ void Trace::UpdateMotion() {
     velocity_ = std::copysign(limitVelocity_, velocity_);
   }
   /* ライン追従角速度を計算 */
-  angularVelocity_ = lineErrorPid_.Update(0, line_->GetErrorAngle(), kPeriodicNotifyInterval);
+  angularVelocity_ = lineErrorPid_.Update(0, line_->GetError(), kPeriodicNotifyInterval);
   /* 設定 */
   servo_->SetTarget(velocity_, angularVelocity_);
 }
@@ -328,7 +328,7 @@ void Trace::UpdateLog() {
     log_.expectTranslate = et;                                      /* 04 Expect Translate */
     log_.estimateTranslate = dis.trans;                             /* 05 Estimate Translate */
     log_.correctedTranslate = velocityMap_.GetTotalDistance();      /* 06 Corrected Translate */
-    log_.errorAngle = line_->GetErrorAngle();                       /* 07 Error Angle */
+    log_.errorAngle = line_->GetError();                       /* 07 Error Angle */
     log_.commandAngularVelocity = lineErrorPid_.Get();              /* 08 Command Angular Velocity */
     log_.commandAngularVelocityP = lineErrorPid_.GetProportional(); /* 09 Command Angular Velocity (P) */
     log_.commandAngularVelocityI = lineErrorPid_.GetIntegral();     /* 10 Command Angular Velocity (I) */

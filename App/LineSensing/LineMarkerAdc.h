@@ -14,8 +14,6 @@
 #include "max11128_reg.h"
 
 namespace LineSensing {
-/* IR LED点灯 */
-void SetIr(bool state);
 
 /**
  * MARK: LineAdc

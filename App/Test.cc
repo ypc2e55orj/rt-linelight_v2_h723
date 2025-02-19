@@ -3,6 +3,7 @@
 /* Project */
 #include "Com.h"
 #include "Config.h"
+#include "Data/Pid.h"
 #include "Fram.h"
 #include "LineSensing/LineSensing.h"
 #include "Mode.h"
@@ -47,8 +48,13 @@ static void TestVelocityMeasure() {
 static void TestEnkaigei() {
   auto &ui = Ui::Instance();
   auto &servo = MotionPlaning::MotionPlaning::Instance().Servo();
-  servo.SetGain({0.0f, 0.00f, 0.0f}, {0.3f, 0.0f, 0.0f});
+  servo.SetGain({0.5f, 0.00f, 0.0f}, {0.0f, 0.00f, 0.0f});
 
+  /* IMUキャリブレーション */
+  if (!MotionSensing::MotionSensing::Instance().CalibrateImu(1000)) {
+    ui.Warn();
+    return;
+  }
   MotionPlaning::MotionPlaning::Instance().NotifyStart();
   MotionSensing::MotionSensing::Instance().NotifyStart();
   auto xLastWakeTime = xTaskGetTickCount();
@@ -88,7 +94,7 @@ static void TestStraight() {
   uint32_t logAddr = 0;
   uint32_t t = 0;
   SlopeVelocityGenerator generator;
-  SlopeVelocityGenerator::Profile profile = {0.0f, 2.0f, 0.0f, 10.0f, -10.0f, 1.0f};
+  SlopeVelocityGenerator::Profile profile = {0.0f, 0.5f, 0.0f, 1.0f, -1.0f, 1.0f};
   auto &odometry = MotionSensing::MotionSensing::Instance().Odometry();
   auto &servo = MotionPlaning::MotionPlaning::Instance().Servo();
   auto &power = PowerMonitoring::PowerMonitoring::Instance().Power();
@@ -99,7 +105,12 @@ static void TestStraight() {
   generator.Generate(profile);
   printf("Total: %ld ms\r\n", generator.GetTotalTime());
 
-  servo.SetGain({5.0f, 0.01f, 0.0f}, {0.f, 0.0f, 0.0f});
+  servo.SetGain({5.0f, 0.01f, 0.0f}, {0.3f, 0.05f, 0.0f});
+  /* IMUキャリブレーション */
+  if (!MotionSensing::MotionSensing::Instance().CalibrateImu(1000)) {
+    ui.Warn();
+    return;
+  }
   MotionPlaning::MotionPlaning::Instance().NotifyStart();
   MotionSensing::MotionSensing::Instance().NotifyStart();
 
@@ -175,6 +186,11 @@ static void TestTurn() {
   printf("Total: %ld ms\r\n", generator.GetTotalTime());
 
   servo.SetGain({0.0f, 0.0f, 0.0f}, {0.3f, 0.05f, 0.0f});
+  /* IMUキャリブレーション */
+  if (!MotionSensing::MotionSensing::Instance().CalibrateImu(1000)) {
+    ui.Warn();
+    return;
+  }
   MotionPlaning::MotionPlaning::Instance().NotifyStart();
   MotionSensing::MotionSensing::Instance().NotifyStart();
 
@@ -231,7 +247,7 @@ static void TestLineMark() {
       ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
       break;
     }
-    auto ea = line.GetErrorAngle() * 180.0f / static_cast<float>(M_PI);
+    auto ea = line.GetError() * 180.0f / static_cast<float>(M_PI);
     auto dn = line.GetDetectNum();
     auto mc = marker.GetCount();
     printf("%ld, %f, %d, %ld, %ld\r\n", HAL_GetTick(), ea, dn, mc[0], mc[1]);
@@ -291,6 +307,8 @@ static void TestTaskList() {
 /* ラインセンサーの値を収集 */
 static void TestCollectLineSensor() {
   auto &ui = Ui::Instance();
+  fputc(2, stdout);
+  fflush(stdout);
   auto &line = LineSensing::LineSensing::Instance().Line();
   LineSensing::LineSensing::Instance().NotifyStart();
   LineSensing::LineImpl::Raw raw{};
@@ -303,8 +321,6 @@ static void TestCollectLineSensor() {
       break;
     } else if (pressTime >= kButtonShortPressThreshold) {
       ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
-      fputc(2, stdout);
-      fflush(stdout);
       line.GetRaw(raw);
       for (uint32_t order = 0; order < 16; order++) {
         fprintf(stdout, "%05d", raw[order]);
@@ -313,10 +329,10 @@ static void TestCollectLineSensor() {
         }
       }
       fprintf(stdout, "\n");
-      fputc(3, stdout);
-      fflush(stdout);
     }
   }
+  fputc(3, stdout);
+  fflush(stdout);
   LineSensing::LineSensing::Instance().NotifyStop();
 }
 /* FRAM ダンプ */
@@ -382,7 +398,45 @@ static void TestEncoder() {
   }
   MotionSensing::MotionSensing::Instance().NotifyStop();
 }
+/* ライン追従テスト */
+static void TestLineFollow() {
+  auto &ui = Ui::Instance();
+  auto &line = LineSensing::LineSensing::Instance().Line();
+  auto &odom = MotionSensing::MotionSensing::Instance().Odometry();
+  auto &servo = MotionPlaning::MotionPlaning::Instance().Servo();
+  uint32_t count = 0;
+  Pid pid{};
+  pid.Reset({3.5f, 0.0f, 0.01f});
+  servo.SetGain({0.0f, 0.00f, 0.0f}, {0.3f, 0.05f, 0.0f});
+  /* IMUキャリブレーション */
+  if (!MotionSensing::MotionSensing::Instance().CalibrateImu(1000)) {
+    ui.Warn();
+    return;
+  }
+  MotionPlaning::MotionPlaning::Instance().NotifyStart();
+  MotionSensing::MotionSensing::Instance().NotifyStart();
+  LineSensing::LineSensing::Instance().NotifyStart();
+  auto xLastWakeTime = xTaskGetTickCount();
+  while (true) {
+    vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1));
+    if (ui.WaitPress(0) >= kButtonShortPressThreshold) {
+      ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
+      break;
+    }
 
+    auto error = line.GetError();
+    auto angVelo = pid.Update(0, error, kPeriodicNotifyInterval);
+    servo.SetTarget(0, angVelo);
+    if (++count >= 100) {
+      count = 0;
+      printf(">e:%f\n>c:%f\n>m:%f\n", static_cast<double>(error), static_cast<double>(angVelo),
+             static_cast<double>(odom.GetVelocity().rot));
+    }
+  }
+  LineSensing::LineSensing::Instance().NotifyStop();
+  MotionSensing::MotionSensing::Instance().NotifyStop();
+  MotionPlaning::MotionPlaning::Instance().NotifyStop();
+}
 /* テスト用モードセレクト */
 void TestSelectMode() {
   /* モード選択 */
@@ -427,6 +481,9 @@ void TestSelectMode() {
         break;
       case 0x0c:
         TestEncoder();
+        break;
+      case 0x0d:
+        TestLineFollow();
         break;
       case 0x0f:
         return; /* メインに戻る */

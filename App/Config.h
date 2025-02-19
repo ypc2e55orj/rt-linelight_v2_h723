@@ -28,7 +28,7 @@ constexpr uint32_t kPowerAdcErrorLimit = 5000;           /* 電力計測異常�
 constexpr float kTorqueConstant = 4.83e-3f;                            /* モータートルク定数[N*m/A] */
 constexpr float kMotorBackEmf = 1.0f / 1980.0f;                        /* モーター起電力定数[V/rpm] */
 constexpr float kMotorResistance = 1.94f;                              /* モーター抵抗[Ω] */
-constexpr float kMotorLimitVoltage = 9.0f;                             /* モーター上限電圧[V] */
+constexpr float kMotorLimitVoltage = 12.6f;                            /* モーター上限電圧[V] */
 constexpr float kMotorCurrentMeasureDivResistor = 4.99e3f;             /* モーター電流計測分圧抵抗[Ω] */
 constexpr float kMotorCurrentMeasureOffset = kRegulatorVoltage / 2.0f; /* モーター電流計測オフセット[V] */
 constexpr float kSuctionFanLimitVoltage = 3.7f;                        /* 吸引ファン上限電圧[V] */
@@ -44,20 +44,17 @@ constexpr float kFeedForwardAngularGain = 0.0f; /* 旋回方向 TODO: */
 constexpr float kPeriodicNotifyInterval = 1.0e-3f; /* センサー更新間隔[s] */
 
 /* ラインセンサー */
-constexpr uint32_t kLineNumCalibrationSample = 5000;   /* ラインセンサーキャリブレーション時間[ms] */
-constexpr uint32_t kLineNumErrorMovingAverage = 32;    /* ラインセンサーエラー角度移動平均サンプル数 */
-constexpr uint8_t kLineCrossDetectNum = 8;             /* ラインセンサー交差とする反応センサ個数 */
-constexpr float kLineDistanceFromCenter = 81.04e-3f;   /* ラインセンサーから車軸までの距離[m] */
-constexpr float kLineDistanceFromMarker = 49.63e-3f;   /* ラインセンサーからマーカーセンサーまでの距離[m] */
-constexpr float kLineToDistCoeff = 0.027397009f;       /* ラインセンサー横ずれ距離変換 係数 */
-constexpr float kLineToDistIntercept = -0.0011686919f; /* ラインセンサー横ずれ距離変換 切片 */
-constexpr float kLineErrorAngleLimit = 0.17453292f;    /* ラインセンサーエラー角度上限[rad] */
-constexpr float kLineBrownOutIgnoreDistance = 0.1f;    /* ラインセンサーブラウンアウト無視距離[m] */
-constexpr float kLineDetectThreshold = 0.6f;           /* ラインセンサー検知しきい値 */
-constexpr float kMarkerDetectDistance = 0.010f;        /* マーカー検知距離[m] */
-constexpr uint32_t kMarkerNumMovingAverage = 4;        /* ラインセンサー移動平均サンプル数 */
-constexpr float kMarkerDetectThreshold = 0.5f;         /* マーカーセンサー検知しきい値 */
-constexpr float kMarkerIgnoreOffset = 0.05f;           /* マーカー検知無視オフセット[m] */
+constexpr uint32_t kLineNumCalibrationSample = 5000; /* ラインセンサーキャリブレーション時間[ms] */
+constexpr uint32_t kLineNumErrorMovingAverage = 4;   /* ラインセンサーエラー角度移動平均サンプル数 */
+constexpr uint8_t kLineCrossDetectNum = 8;           /* ラインセンサー交差とする反応センサ個数 */
+constexpr float kLineDistanceFromCenter = 81.04e-3f; /* ラインセンサーから車軸までの距離[m] */
+constexpr float kLineDistanceFromMarker = 49.63e-3f; /* ラインセンサーからマーカーセンサーまでの距離[m] */
+constexpr float kLineBrownOutIgnoreDistance = 0.1f;  /* ラインセンサーブラウンアウト無視距離[m] */
+constexpr float kLineDetectThreshold = 0.6f;         /* ラインセンサー検知しきい値 */
+constexpr float kMarkerDetectDistance = 0.010f;      /* マーカー検知距離[m] */
+constexpr uint32_t kMarkerNumMovingAverage = 4;      /* ラインセンサー移動平均サンプル数 */
+constexpr float kMarkerDetectThreshold = 0.5f;       /* マーカーセンサー検知しきい値 */
+constexpr float kMarkerIgnoreOffset = 0.05f;         /* マーカー検知無視オフセット[m] */
 
 /* ライン記憶 */
 constexpr float kExploringLoggingDistance = 0.01f; /* 曲率マップ解像度[m] */

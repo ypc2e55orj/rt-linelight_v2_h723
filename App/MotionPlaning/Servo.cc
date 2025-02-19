@@ -53,14 +53,14 @@ void ServoImpl::Update(float batteryVoltage, /* バッテリー電圧 [V] */
 
   /* フィードフォワード制御 */
   /* 要求モーター回転数を計算 */
-  {
-    auto a = targetLinear_ / R;
-    auto b = (W * targetAngular_) / (2.0f * R);
-    feedforwardWheelOmega_ = {
-        kRadPerSecToRpm * (a + b),
-        kRadPerSecToRpm * (a - b),
-    };
-  }
+  // {
+  //   auto a = targetLinear_ / R;
+  //   auto b = (W * targetAngular_) / (2.0f * R);
+  //   feedforwardWheelOmega_ = {
+  //       kRadPerSecToRpm * (a + b),
+  //       kRadPerSecToRpm * (a - b),
+  //   };
+  // }
   /* 要求電流を計算 */
   // {
   //   auto a = (R / 2.0f) * M * idealLinearAccel_;
@@ -71,10 +71,10 @@ void ServoImpl::Update(float batteryVoltage, /* バッテリー電圧 [V] */
   //   };
   // }
   /* FF項を電圧に変換 */
-  feedforward_ = {
-      kMotorBackEmf * feedforwardWheelOmega_[0],
-      kMotorBackEmf * feedforwardWheelOmega_[1],
-  };
+  // feedforward_ = {
+  //     kMotorBackEmf * feedforwardWheelOmega_[0],
+  //     kMotorBackEmf * feedforwardWheelOmega_[1],
+  // };
 
   /* フィードバック制御 */
   feedback_ = {
@@ -83,9 +83,13 @@ void ServoImpl::Update(float batteryVoltage, /* バッテリー電圧 [V] */
   };
 
   /* 電圧に換算 */
+  // voltage_ = {
+  //     feedforward_[0] + feedback_[0] + feedback_[1],
+  //     feedforward_[1] + feedback_[0] - feedback_[1],
+  // };
   voltage_ = {
-      feedforward_[0] + feedback_[0] + feedback_[1],
-      feedforward_[1] + feedback_[0] - feedback_[1],
+      feedback_[0] + feedback_[1],
+      feedback_[0] - feedback_[1],
   };
 
   /* NaN・Infを弾く */
@@ -96,7 +100,7 @@ void ServoImpl::Update(float batteryVoltage, /* バッテリー電圧 [V] */
 
   /* 上限電圧で丸める */
   for (auto &voltage : voltage_) {
-    voltage = std::copysign(std::min(std::abs(voltage), kMotorLimitVoltage), voltage);
+    voltage = std::copysign(std::min(std::abs(voltage), std::min(kMotorLimitVoltage, batteryVoltage)), voltage);
   }
 
   duty_ = {

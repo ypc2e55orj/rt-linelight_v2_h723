@@ -75,7 +75,7 @@ class MarkerImpl {
   bool Update(float distance);
 
   /* 閾値を設定 */
-  void SetThreshold(const Max &mx);
+  void SetCalibration(const Max &max);
 
   /* 無視開始距離を設定 */
   void SetIgnore(float distance);
@@ -110,9 +110,11 @@ class LineImpl {
  public:
   static constexpr uint32_t kNum = 16;
 
-  using Offset = std::array<float, kNum>;
+  using Coeff = std::array<float, kNum>;
   using Max = std::array<uint16_t, kNum>;
+  using Min = std::array<uint16_t, kNum>;
   using Raw = std::array<uint16_t, kNum>;
+  using Value = std::array<float, kNum>;
 
   enum class State {
     kNoneDetecting, /* コースアウト検出中 */
@@ -128,14 +130,8 @@ class LineImpl {
   /* 更新 */
   bool Update(float distance);
 
-  /* 閾値を設定 */
-  void SetThreshold(const Max &mx);
-
-  /* オフセットを設定 */
-  void SetOffset(const Offset &of);
-
-  /* オフセットを取得 */
-  Offset GetOffset() const;
+  /* キャリブレーション値を設定 */
+  void SetCalibration(const Min &min, const Max &max, const Coeff &coeff);
 
   /* 生値を取得 */
   void GetRaw(Raw &raw) const;
@@ -146,11 +142,8 @@ class LineImpl {
   /* 反応センサーの個数を取得 */
   uint8_t GetDetectNum() const;
 
-  /* 反応センサーの位置を取得 */
-  uint16_t GetDetectPos() const;
-
-  /* エラー角度を取得 */
-  float GetErrorAngle() const;
+  /* エラーを取得 */
+  float GetError() const;
 
   /* ラインがないか */
   bool IsNone() const;
@@ -159,23 +152,21 @@ class LineImpl {
   bool IsCrossPassed() const;
 
  private:
-  using Value = std::array<float, 16>;
   mutable Mutex mtx_;
 
-  /* ラインとのエラー角度を計算 */
-  static float CalculateErrorAngle(const Value &v);
+  Coeff coeff_;
+  Min min_;
+  Max max_;
 
-  Value threshold_; /* 閾値 */
-  Offset offset_;   /* オフセット */
-  Raw rawLast_;     /* 最新の生値 */
+  Value valueLast_;
+  float diffLast_;
 
   /* 加工後の状態 */
   State state_;
-  uint16_t detectPos_;                                    /* 反応センサーの位置 [bit] */
   uint8_t detectNum_;                                     /* 反応センサーの個数 */
   float brownOutDistance_;                                /* ライン無反応開始距離 [m] */
-  MovingAverage<float, float, kLineNumErrorMovingAverage> /* エラー角度の移動平均 */
-      errorAngleAverage_;
+  MovingAverage<float, float, kLineNumErrorMovingAverage> /* エラーの移動平均 */
+      errorAverage_;
 };
 }  // namespace LineSensing
 

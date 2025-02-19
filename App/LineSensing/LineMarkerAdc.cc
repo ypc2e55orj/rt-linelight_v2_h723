@@ -13,8 +13,6 @@ extern SPI_HandleTypeDef hspi3;
 extern ADC_HandleTypeDef hadc1;
 
 namespace LineSensing {
-/* IR LED点灯 */
-void SetIr(bool state) { HAL_GPIO_WritePin(IR_EN_GPIO_Port, IR_EN_Pin, state ? GPIO_PIN_SET : GPIO_PIN_RESET); }
 
 /**
  * MARK: LineAdc
@@ -65,8 +63,10 @@ void LineAdc::ConfigureMax11128() {
   SCB_CleanDCache_by_Addr(reinterpret_cast<uint32_t *>(txBuffer_), sizeof(txBuffer_));
 }
 
+
 /* コンストラクタ */
-LineAdc::LineAdc() : txRxCpltSemphr_(xSemaphoreCreateBinaryStatic(&txRxCpltSemphrBuffer_)) {}
+LineAdc::LineAdc()
+    : txRxCpltSemphr_(xSemaphoreCreateBinaryStatic(&txRxCpltSemphrBuffer_)) {}
 
 /* 初期化 */
 bool LineAdc::Initialize() {
