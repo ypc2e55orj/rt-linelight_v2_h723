@@ -29,8 +29,8 @@ void Motor::Disable() { HAL_GPIO_WritePin(DRV_EN_GPIO_Port, DRV_EN_Pin, GPIO_PIN
 /* フォールトを取得 */
 bool Motor::IsFault() { return HAL_GPIO_ReadPin(DRV_NFAULT_GPIO_Port, DRV_NFAULT_Pin) != GPIO_PIN_RESET; }
 
-/* フリーに設定 */
-void Motor::SetFree() {
+/* ブレーキ */
+void Motor::Brake() {
   for (int i = 0; i < 4; i++) {
     __HAL_TIM_SET_COMPARE(&htim1, channels[i], 0);
   }

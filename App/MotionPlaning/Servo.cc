@@ -27,11 +27,13 @@ void ServoImpl::SetTarget(float linear, float angular) {
 /* リセット */
 void ServoImpl::Reset() {
   std::scoped_lock<Mutex> lock(mtx_);
-  hasError_ = false;
-  targetLinear_ = 0.0f;
-  targetAngular_ = 0.0f;
   pidLinear_.Reset();
   pidAngular_.Reset();
+  targetLinear_ = 0.0f;
+  targetAngular_ = 0.0f;
+  isEmergency_ = false;
+  errorLinearTime_ = 0;
+  errorAngularTime_ = 0;
 }
 
 /* 更新 */
@@ -94,7 +96,7 @@ void ServoImpl::Update(float batteryVoltage, /* バッテリー電圧 [V] */
 
   /* NaN・Infを弾く */
   if (!std::isfinite(voltage_[0]) || !std::isfinite(voltage_[1])) {
-    hasError_ = true;
+    isEmergency_ = true;
     return;
   }
 
@@ -107,6 +109,23 @@ void ServoImpl::Update(float batteryVoltage, /* バッテリー電圧 [V] */
       voltage_[0] / batteryVoltage,
       voltage_[1] / batteryVoltage,
   };
+
+  /* エラー判定 */
+  if (std::abs(measureLinear) < std::abs(targetLinear_ * kServoErrorLinearGain)) {
+    if (++errorLinearTime_ >= kServoErrorLinearTime) {
+      isEmergency_ = true;
+    }
+  } else {
+    errorLinearTime_ = 0;
+  }
+  if (std::abs(measureAngular) < std::abs(targetAngular_ * kServoErrorAngularGain)) {
+    if (++errorAngularTime_ >= kServoErrorAngularTime) {
+      isEmergency_ = true;
+    }
+  } else {
+    errorAngularTime_ = 0;
+  }
+
 #pragma GCC diagnostic pop
 }
 
@@ -136,6 +155,9 @@ ServoImpl::ControlAmount ServoImpl::GetFeedBackAmount() {
   return feedback_;
 }
 
-/* エラーが発生したか */
-bool ServoImpl::HasError() { return hasError_; }
+/* 緊急停止 */
+void ServoImpl::EmergencyStop() { isEmergency_ = true; }
+
+/* 緊急停止が必要かを取得 */
+bool ServoImpl::IsEmergency() { return isEmergency_; }
 }  // namespace MotionPlaning

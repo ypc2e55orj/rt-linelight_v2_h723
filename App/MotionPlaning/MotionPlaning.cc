@@ -37,16 +37,19 @@ void MotionPlaning::TaskEntry() {
         /* TODO: エラーハンドリング */
       }
       if (notify & kTaskNotifyBitStop) {
-        motor.SetFree();
+        motor.Brake();
         motor.Disable();
         break;
       }
       if (notify & kTaskNotifyBitPeriodic) {
         float batteryVoltage = power.GetBatteryVoltage();
-        auto acc = odometry.GetAcceleration();
         auto velo = odometry.GetVelocity();
         servo_.Update(batteryVoltage, velo.trans, velo.rot);
-        motor.SetDuty(servo_.GetMotorDuty());
+        if (servo_.IsEmergency()) {
+          motor.Brake();
+        } else {
+          motor.SetDuty(servo_.GetMotorDuty());
+        }
       }
     }
   }

@@ -36,12 +36,14 @@ class ServoImpl {
 
   /* 制御量を取得 */
   ControlAmount GetFeedForwardOmega();
-  ControlAmount GetFeedForwardCurrent();
   ControlAmount GetFeedForwardAmount();
   ControlAmount GetFeedBackAmount();
 
-  /* エラーが発生したかを取得 */
-  bool HasError();
+  /* 緊急停止 */
+  void EmergencyStop();
+
+  /* 緊急停止が必要かを取得 */
+  bool IsEmergency();
 
  private:
   mutable Mutex mtx_;
@@ -59,7 +61,9 @@ class ServoImpl {
   ControlAmount voltage_{};
   ControlAmount duty_{};
 
-  bool hasError_;
+  uint32_t errorLinearTime_;
+  uint32_t errorAngularTime_;
+  bool isEmergency_;
 };
 }  // namespace MotionPlaning
 #endif  // MOTIONPLANING_SERVO_H_

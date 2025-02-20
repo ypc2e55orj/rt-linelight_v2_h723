@@ -45,12 +45,12 @@ float PositionCorrector::Correct(Landmark mark, /* 補正に使用するラン�
   switch (mark) {
     case kCurvatureMark: {
       /* 曲率マーカー */
-      bool ret = SearchNearest(curvatureVec_, distance, kCorrectorAllowErrorCurvature, curvatureIndex_, correctDist);
+      bool ret = SearchNearest(curvatureVec_, distance, kCorrectionAllowErrorCurvature, curvatureIndex_, correctDist);
       return ret ? correctDist : distance;
     }
     case kCrossLine: {
       /* 交差 */
-      bool ret = SearchNearest(crossLineVec_, distance, kCorrectorAllowErrorCrossLine, crossLineIndex_, correctDist);
+      bool ret = SearchNearest(crossLineVec_, distance, kCorrectionAllowErrorCrossLine, crossLineIndex_, correctDist);
       return ret ? correctDist : distance;
     }
     default:

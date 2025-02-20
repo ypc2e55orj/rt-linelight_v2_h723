@@ -36,7 +36,6 @@ void Trace::Run(const Parameter &param) {
   /* リセット */
   state_ = kStateResetting;
   resetCount_ = 0;
-  isEmergency_ = false;
 
   if (param.mode == Mode::kExploreRunning) {
     /* 既に探索済みの場合は警告 */
@@ -74,20 +73,35 @@ void Trace::Run(const Parameter &param) {
   ms_->NotifyStart();
   ls_->NotifyStart();
   mp_->NotifyStart();
-  while (state_ != kStateStoped) {
-    if (!Periodic::WaitPeriodicNotify()) {
-      state_ = kStateEmergency;
+  while (state_ != kStateGoaledStopped) {
+    if (!Periodic::WaitPeriodicNotify() || CheckEmergency()) {
+      state_ = kStateEmergencyStop;
       break;
     }
     UpdateState();
     UpdateMotion();
     UpdateLog();
   }
-  OnStopped();
+  /* 緊急停止(この時点では直前の速度のまま動いている) */
+  if (state_ == kStateEmergencyStop) {
+    servo_->EmergencyStop(); /* ON-Breakで停止 */
+  }
+  /* ゴール後の姿勢保持(一定以上まで減速している想定) */
+  else if (state_ == kStateGoaledStopped) {
+    servo_->SetTarget(0.0f, 0.0f); /* フィードバックで停止 */
+  }
+  while (true) {
+    vTaskDelay(pdMS_TO_TICKS(1));
+    if (std::abs(odometry_->GetVelocity().trans) < 0.01f) {
+      break;
+    }
+  }
+  vTaskDelay(pdMS_TO_TICKS(500));
+  suction_->Disable();
   mp_->NotifyStop();
   ls_->NotifyStop();
   ms_->NotifyStop();
-  if (isEmergency_) {
+  if (state_ == kStateEmergencyStop) {
     ui_->Warn();
   }
   vTaskDelay(pdMS_TO_TICKS(100));
@@ -110,9 +124,6 @@ bool Trace::Confirmed() {
  */
 void Trace::UpdateState() {
   /* 状態の変更と状態コールバックのみ */
-  if (CheckEmergency()) {
-    state_ = kStateEmergency;
-  }
   switch (state_) {
     case kStateResetting:
       /* リセット */
@@ -126,11 +137,11 @@ void Trace::UpdateState() {
       OnStartWaiting();
       if (marker_->IsStarted()) {
         state_ = kStateStarted;
+        OnStarted();
       }
       break;
     case kStateStarted:
       /* スタートマーカー通過 */
-      OnStarted();
       state_ = kStateGoalWaiting;
       break;
     case kStateGoalWaiting:
@@ -138,29 +149,29 @@ void Trace::UpdateState() {
       OnGoalWaiting();
       if (marker_->IsGoaled()) {
         state_ = kStateGoaled;
+        OnGoaled();
       }
-      break;
-    case kStateEmergency:
-      /* 緊急停止 */
-      OnEmergency();
-      state_ = kStateStopWaiting;
       break;
     case kStateGoaled:
       /* ゴールマーカー通過 */
-      OnGoaled();
-      state_ = kStateStopWaiting;
+      state_ = kStateGoaledStopWaiting;
       break;
-    case kStateStopWaiting:
-      /* 減速中 */
-      OnStopWaiting();
+    case kStateGoaledStopWaiting:
+      /* ゴール後減速中 */
+      OnGoaledStopWaiting();
       if (velocity_ < 0.01f) {
-        state_ = kStateStoped;
+        state_ = kStateGoaledStopped;
+        OnGoaledStopped();
       }
       break;
-    case kStateStoped:
-      /* 停止 */
-      /* ここでwhileを抜ける */
+    case kStateGoaledStopped:
+      /*ゴール後停止完了 */
       break;
+    case kStateEmergencyStop:
+      /* 緊急停止 */
+      break;
+    default:
+      state_ = kStateEmergencyStop;
   }
 }
 
@@ -168,10 +179,8 @@ void Trace::UpdateState() {
 void Trace::OnResetting() {
   /* 走行制御 */
   suction_->Enable();
-  limitVelocity_ = 0.0f;
   velocity_ = 0.0f;
   acceleration_ = 0.0f;
-  /* angularVelocity_ = 0.0f; */ /* 吸引ファンで動いてしまうため */
 
   /* ログ */
   logFrequencyCount_ = 0;
@@ -182,7 +191,7 @@ void Trace::OnResetting() {
 /* スタートマーカーを待つ */
 void Trace::OnStartWaiting() {
   /* 走行制御 */
-  limitVelocity_ = param_.limitVelocity;
+  maxVelocity_ = param_.limitVelocity;
   acceleration_ = param_.acceleration;
 }
 /* スタートマーカー通過 */
@@ -233,10 +242,10 @@ void Trace::OnGoalWaiting() {
     auto now = velocityMap_.GetVelocity();
     auto next = velocityMap_.GetNextVelocity();
     if (next < now) {
-      limitVelocity_ = std::abs(now);
+      maxVelocity_ = std::abs(now);
       acceleration_ = -1.0f * param_.acceleration;
     } else { /* next > now */
-      limitVelocity_ = std::abs(next);
+      maxVelocity_ = std::abs(next);
       acceleration_ = param_.acceleration;
     }
   }
@@ -247,17 +256,12 @@ bool Trace::CheckEmergency() {
     return true;
   } else if (line_->IsNone()) { /* ラインが見えない */
     return true;
-  } else if (power_->GetBatteryErrorTime() > kBatteryErrorLimit) { /* バッテリーエラー */
+  } else if (power_->GetBatteryErrorTime() > kBatteryErrorTime) { /* バッテリーエラー */
+    return true;
+  } else if (servo_->IsEmergency()) { /* サーボでエラー */
     return true;
   }
   return false;
-}
-/* 緊急停止 */
-void Trace::OnEmergency() {
-  isEmergency_ = true;
-
-  /* 走行制御 */
-  acceleration_ = CalculateDeceleration(velocity_, param_.stopDistance);
 }
 /* ゴールマーカー通過 */
 void Trace::OnGoaled() {
@@ -274,13 +278,11 @@ void Trace::OnGoaled() {
   acceleration_ = CalculateDeceleration(velocity_, param_.stopDistance);
 }
 /* 減速中 */
-void Trace::OnStopWaiting() {}
+void Trace::OnGoaledStopWaiting() {}
 /* 停止 */
-void Trace::OnStopped() {
-  /* 走行制御 */
-  limitVelocity_ = 0.0f;
-  angularVelocity_ = 0.0f;
-  suction_->Disable();
+void Trace::OnGoaledStopped() {
+  acceleration_ = 0.0f;
+  velocity_ = 0.0f;
 }
 
 /* 走行制御を更新 */
@@ -291,8 +293,8 @@ void Trace::UpdateMotion() {
   }
   /* 設定された制限速度を元に加減速した速度を計算 */
   velocity_ += acceleration_ * kPeriodicNotifyInterval;
-  if (std::abs(velocity_) > limitVelocity_) {
-    velocity_ = std::copysign(limitVelocity_, velocity_);
+  if (std::abs(velocity_) > maxVelocity_) {
+    velocity_ = std::copysign(maxVelocity_, velocity_);
   }
   /* ライン追従角速度を計算 */
   angularVelocity_ = lineErrorPid_.Update(0, line_->GetError(), kPeriodicNotifyInterval);
@@ -328,7 +330,7 @@ void Trace::UpdateLog() {
     log_.expectTranslate = et;                                      /* 04 Expect Translate */
     log_.estimateTranslate = dis.trans;                             /* 05 Estimate Translate */
     log_.correctedTranslate = velocityMap_.GetTotalDistance();      /* 06 Corrected Translate */
-    log_.errorAngle = line_->GetError();                       /* 07 Error Angle */
+    log_.errorAngle = line_->GetError();                            /* 07 Error Angle */
     log_.commandAngularVelocity = lineErrorPid_.Get();              /* 08 Command Angular Velocity */
     log_.commandAngularVelocityP = lineErrorPid_.GetProportional(); /* 09 Command Angular Velocity (P) */
     log_.commandAngularVelocityI = lineErrorPid_.GetIntegral();     /* 10 Command Angular Velocity (I) */

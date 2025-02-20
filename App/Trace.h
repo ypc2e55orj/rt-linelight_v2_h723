@@ -73,10 +73,10 @@ class Trace : public Singleton<Trace> {
     kStateStartWaiting,
     kStateStarted,
     kStateGoalWaiting,
-    kStateEmergency,
     kStateGoaled,
-    kStateStopWaiting,
-    kStateStoped,
+    kStateGoaledStopWaiting,
+    kStateGoaledStopped,
+    kStateEmergencyStop,
   };
 
   /* ログ */
@@ -129,8 +129,6 @@ class Trace : public Singleton<Trace> {
   State state_{kStateResetting};
   /* リセットタイマー */
   uint32_t resetCount_{0};
-  /* 緊急停止したか */
-  bool isEmergency_{false};
 
   /* 半径算出探索 */
   MotionPlaning::RadiusExplorer radiusExplorer_;
@@ -141,7 +139,7 @@ class Trace : public Singleton<Trace> {
 
   /* 速度・角速度 */
   float acceleration_{0.0f};    /* 加速度 [m/ss] */
-  float limitVelocity_{0.0f};   /* 制限速度 [m/s] */
+  float maxVelocity_{0.0f};     /* 制限速度 [m/s] */
   float velocity_{0.0f};        /* 速度 [m/s] */
   float angularVelocity_{0.0f}; /* 角速度 [rad/s] */
   Pid lineErrorPid_{};          /* ライン追従PID */
@@ -156,6 +154,8 @@ class Trace : public Singleton<Trace> {
   /* 操作者に確認 */
   bool Confirmed();
 
+  /* 緊急状態かどうか */
+  bool CheckEmergency();
   /* 走行状態を更新 */
   void UpdateState();
 
@@ -167,16 +167,12 @@ class Trace : public Singleton<Trace> {
   void OnStarted();
   /* ゴールマーカーを待つ */
   void OnGoalWaiting();
-  /* 緊急状態かどうか */
-  bool CheckEmergency();
-  /* 緊急停止 */
-  void OnEmergency();
   /* ゴールマーカー通過 */
   void OnGoaled();
   /* 減速中 */
-  void OnStopWaiting();
+  void OnGoaledStopWaiting();
   /* 停止 */
-  void OnStopped();
+  void OnGoaledStopped();
 
   /* 走行制御を更新 */
   void UpdateMotion();

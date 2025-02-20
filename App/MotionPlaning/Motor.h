@@ -22,8 +22,8 @@ class Motor final : public Singleton<Motor> {
   /* フォールトを取得 */
   bool IsFault();
 
-  /* フリーに設定 */
-  void SetFree();
+  /* ブレーキ */
+  void Brake();
 
   /* デューティを設定 */
   void SetDuty(const Duty &duty);

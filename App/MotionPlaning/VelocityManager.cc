@@ -25,7 +25,7 @@ void RadiusExplorer::Update(float deltaDistance, /* 周期での変位距離 [m]
 ) {
   accDeltaDistance_ += deltaDistance;
   accYawRate_ += yawRate * kPeriodicNotifyInterval;
-  if (accDeltaDistance_ >= kExploringLoggingDistance) {
+  if (accDeltaDistance_ >= kMappingDistance) {
     exploringVec_.push_back({accDeltaDistance_, accYawRate_});
     accDeltaDistance_ = 0.0f;
     accYawRate_ = 0.0f;
@@ -68,8 +68,8 @@ bool VelocityMapGenerator::Generate(const std::vector<RadiusVelocityLimit> &lv, 
   /* 上限速度マップを作成 */
   const auto &ev = radiusExplorer_.Get();
   for (uint32_t i = 1; i < ev.size(); i++) {
-    auto theta = std::max(std::abs(ev[i].yaw), kExploringMinAngle);
-    auto radius = std::min(ev[i].distance / theta, kExploringMaxRadius);
+    auto theta = std::max(std::abs(ev[i].yaw), kMappingMinAngle);
+    auto radius = std::min(ev[i].distance / theta, kMappingMaxRadius);
     uint32_t li = 0;
     for (; li < lv.size() - 1; li++) {
       if (radius < lv[li].minRadius) {

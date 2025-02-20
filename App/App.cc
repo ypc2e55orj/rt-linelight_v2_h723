@@ -212,7 +212,7 @@ extern "C" void vAPP_TaskEntry() {
             {1.0f, 1.0f}, /* <R100, 1.0m/s */
         };
         trace.CalculateVelocityMap(limits, param.limitVelocity, param.acceleration, param.acceleration, 10);
-        // trace.Run(param);
+        trace.Run(param);
       } break;
       case 0x0a:
         trace.PrintLog();
