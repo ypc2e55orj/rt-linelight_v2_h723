@@ -21,8 +21,8 @@ constexpr float kBatteryVoltageAdcGain = 4.0f;           /* バッテリー電�
 constexpr float kBatteryVoltageLimitMin = 10.50f;        /* バッテリー下限電圧[V] */
 constexpr float kBatteryVoltageLimitMax = 12.60f;        /* バッテリー上限電圧[V] */
 constexpr uint32_t kBatteryVoltageNumMovingAverage = 16; /* バッテリー電圧移動平均サンプル数 */
-constexpr uint32_t kBatteryErrorLimit = 5000;            /* バッテリー電圧異常検出時間 [ms] */
-constexpr uint32_t kPowerAdcErrorLimit = 5000;           /* 電力計測異常検出時間 [ms] */
+constexpr uint32_t kBatteryErrorTime = 5000;             /* 異常とするバッテリー電圧下限以下の連続時間 [ms] */
+constexpr uint32_t kPowerAdcErrorTime = 5000;            /* 異常とするADC取得失敗連続回数 */
 
 /* モーター */
 constexpr float kTorqueConstant = 4.83e-3f;                            /* モータートルク定数[N*m/A] */
@@ -39,6 +39,12 @@ constexpr uint32_t kEncoderNumMovingAverage = 4; /* エンコーダー移動平�
 /* FF項 */
 constexpr float kFeedForwardLinearGain = 0.0f;  /* 並進方向 TODO: */
 constexpr float kFeedForwardAngularGain = 0.0f; /* 旋回方向 TODO: */
+
+/* サーボ */
+constexpr float kServoErrorLinearGain = 0.5f;    /* 目標速度を元にした下限速度のゲイン */
+constexpr uint32_t kServoErrorLinearTime = 500;  /* 異常とする下限速度未満連続時間[ms] */
+constexpr float kServoErrorAngularGain = 0.5f;   /* 目標角速度を元にした下限角速度のゲイン */
+constexpr uint32_t kServoErrorAngularTime = 500; /* 異常とする下限角速度未満連続時間[ms] */
 
 /* 周期通知 (Periodic) */
 constexpr float kPeriodicNotifyInterval = 1.0e-3f; /* センサー更新間隔[s] */

@@ -37,7 +37,7 @@ void PowerMonitoring::TaskEntry() {
       if (!power_.Update()) {
         /* TODO: エラー時 */
       }
-      if (power_.GetAdcErrorTime() >= kPowerAdcErrorLimit || power_.GetBatteryErrorTime() >= kBatteryErrorLimit) {
+      if (power_.GetAdcErrorTime() >= kPowerAdcErrorTime || power_.GetBatteryErrorTime() >= kBatteryErrorTime) {
         /* 一定時間以上異常の場合はリセット */
         NVIC_SystemReset();
       }
