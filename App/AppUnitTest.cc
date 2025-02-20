@@ -259,7 +259,7 @@ extern "C" void vAPP_TaskEntry() {
   /* キャリブレーション */
   ui.WaitPress();
   ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
-  sensing.Calibrate(2500);
+  sensing.StoreCalibrationData(2500);
 
   auto &line = sensing.Line();
   LineSensing::LineImpl::Raw raw{};

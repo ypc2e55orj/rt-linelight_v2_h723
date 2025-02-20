@@ -63,7 +63,7 @@ constexpr float kMarkerDetectThreshold = 0.5f;       /* マーカーセンサー
 constexpr float kMarkerIgnoreOffset = 0.05f;         /* マーカー検知無視オフセット[m] */
 
 /* ライン記憶 */
-constexpr float kMappingLimitLength = 60.0f; /* 最大コース記憶距離[m] */
+constexpr float kMappingLimitLength = 65.0f; /* 最大コース記憶距離[m] */
 constexpr float kMappingDistance = 0.01f;    /* 曲率マップ解像度[m] */
 constexpr float kMappingMaxRadius = 5.0f;    /* 最大曲率半径[m] */
 constexpr float kMappingMinAngle = 0.00001f; /* 最小角度[rad] */

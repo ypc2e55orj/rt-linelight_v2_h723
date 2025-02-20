@@ -5,6 +5,7 @@
 #include "LineSensing/Calibrator.h"
 #include "LineSensing/LineMarkerAdc.h"
 #include "MotionSensing/MotionSensing.h"
+#include "NonVolatileData.h"
 #include "Periodic.h"
 
 /* グローバル変数定義 */
@@ -51,8 +52,32 @@ bool LineSensing::Initialize() {
   return true;
 }
 
+/* 不揮発メモリからキャリブレーション情報を復元 */
+bool LineSensing::LoadCalibrationData() {
+  LineImpl::Min lineMin;
+  LineImpl::Max lineMax;
+  LineImpl::Coeff lineCoeff;
+  MarkerImpl::Max markerMax;
+  /* 補正値を読み出し */
+  if (!NonVolatileData::ReadLineSensorCalibrationData(lineMin, lineMax, lineCoeff, markerMax)) {
+    return false;
+  }
+  printf(" ----- NonVolatileData::ReadLineSensorCalibrationData ----- \r\n");
+  for (uint32_t ch = 0; ch < 8; ch++) {
+    printf("Right%ld Min: %d, Max: %d, Coeff: %f\r\n", ch, lineMin[ch], lineMax[ch],
+           static_cast<double>(lineCoeff[ch]));
+    printf("Left %ld Min: %d, Max: %d, Coeff: %f\r\n", ch, lineMin[ch + 8], lineMax[ch + 8],
+           static_cast<double>(lineCoeff[ch + 8]));
+  }
+  printf("Marker Right Max: %d\r\n", markerMax[0]);
+  printf("Marker Left  Max: %d\r\n", markerMax[1]);
+  marker_.SetCalibration(markerMax);
+  line_.SetCalibration(lineMin, lineMax, lineCoeff);
+  return true;
+}
+
 /* キャリブレーション */
-bool LineSensing::Calibrate(uint32_t sampleNum) {
+bool LineSensing::StoreCalibrationData(uint32_t sampleNum) {
   Calibrator<MarkerAdc> markerCalibrator(MarkerAdc::Instance());
   Calibrator<LineAdc> lineCalibrator(LineAdc::Instance());
   vTaskDelay(pdMS_TO_TICKS(5));
@@ -72,24 +97,24 @@ bool LineSensing::Calibrate(uint32_t sampleNum) {
       return false;
     }
   }
-  /* TODO:
-   * 補正値をフラッシュに保存しておいてフラッシュから復元するメソッドを用意 */
   markerCalibrator.Calculate();
   lineCalibrator.Calculate();
-  auto markerMin = markerCalibrator.GetMin();
   auto markerMax = markerCalibrator.GetMax();
   auto lineCoeff = lineCalibrator.GetCoeff();
   auto lineMin = lineCalibrator.GetMin();
   auto lineMax = lineCalibrator.GetMax();
-  printf(" ----- LineSensing::Calibrate(%ld) ----- \r\n", sampleNum);
+  printf(" ----- LineSensing::StoreCalibrationData(%ld) ----- \r\n", sampleNum);
   for (uint32_t ch = 0; ch < 8; ch++) {
     printf("Right%ld Min: %d, Max: %d, Coeff: %f\r\n", ch, lineMin[ch], lineMax[ch],
            static_cast<double>(lineCoeff[ch]));
     printf("Left %ld Min: %d, Max: %d, Coeff: %f\r\n", ch, lineMin[ch + 8], lineMax[ch + 8],
            static_cast<double>(lineCoeff[ch + 8]));
   }
-  printf("Marker Right Min: %d Max: %d\r\n", markerMin[0], markerMax[0]);
-  printf("Marker Left  Min: %d Max: %d\r\n", markerMin[1], markerMax[1]);
+  printf("Marker Right Max: %d\r\n", markerMax[0]);
+  printf("Marker Left  Max: %d\r\n", markerMax[1]);
+  if (!NonVolatileData::WriteLineSensorCalibrationData(lineMin, lineMax, lineCoeff, markerMax)) {
+    return false;
+  }
   marker_.SetCalibration(markerMax);
   line_.SetCalibration(lineMin, lineMax, lineCoeff);
   return true;

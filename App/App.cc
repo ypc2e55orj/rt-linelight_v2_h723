@@ -11,6 +11,7 @@
 #include "Mode.h"
 #include "MotionPlaning/MotionPlaning.h"
 #include "MotionSensing/MotionSensing.h"
+#include "NonVolatileData.h"
 #include "Periodic.h"
 #include "PowerMonitoring/PowerMonitoring.h"
 #include "Test.h"
@@ -102,31 +103,21 @@ static void ShowBatteryVoltage() {
          power.GetTick());
 }
 
-/**
- * MARK: Calibrate
- * ラインセンサーのキャリブレーション
- */
-static void Calibrate() {
-  auto &ui = Ui::Instance();
-  ui.WaitPress();
-  ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
-  if (!LineSensing::LineSensing::Instance().Calibrate(2000)) {
-    ui.Fatal();
-  }
-  ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
-}
-
 extern "C" void vAPP_TaskEntry() {
   Initialize();
   ShowBatteryVoltage();
 
-  /* スイッチから手が離れるまで待つ */
   auto &ui = Ui::Instance();
+
+  /* キャリブレーションデータを読み出し */
+  if (!LineSensing::LineSensing::Instance().LoadCalibrationData()) {
+    ui.Fatal();
+  }
+
+  /* スイッチから手が離れるまで待つ */
   ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
   vTaskDelay(1000);
   ui.SetIndicator(0x00, 0xff);
-
-  Calibrate();
 
   uint8_t mode = 0;
   auto &trace = Trace::Instance();
@@ -159,6 +150,11 @@ extern "C" void vAPP_TaskEntry() {
       case 0x05: {
       } break;
       case 0x06: {
+        /* ラインセンサーのキャリブレーション */
+        if (!LineSensing::LineSensing::Instance().StoreCalibrationData(2000)) {
+          ui.Fatal();
+        }
+        ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
       } break;
       case 0x07: {
         /* 最短走行(吸引で確実に走る速度、最短走行が成功しない場合にタイムを縮めるために使用) */

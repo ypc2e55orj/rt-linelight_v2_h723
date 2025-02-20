@@ -2,6 +2,7 @@
 
 /* Project */
 #include "Config.h"
+#include "NonVolatileData.h"
 #include "Periodic.h"
 
 /* FreeRTOS */
@@ -101,6 +102,7 @@ void Trace::Run(const Parameter &param) {
   mp_->NotifyStop();
   ls_->NotifyStop();
   ms_->NotifyStop();
+  NonVolatileData::WriteLogDataNumBytes(logOffset_);
   if (state_ == kStateEmergencyStop) {
     ui_->Warn();
   }
@@ -185,7 +187,7 @@ void Trace::OnResetting() {
   /* ログ */
   logFrequencyCount_ = 0;
   log_ = {};
-  logAddress_ = 0;
+  logOffset_ = 0;
   logEnabled_ = false;
 }
 /* スタートマーカーを待つ */
@@ -315,7 +317,7 @@ void Trace::UpdateLog() {
     logFrequencyCount_ = 0;
     isWrite = true;
   }
-  if (isWrite && logAddress_ + sizeof(Log) < Fram::kMaxAddress) {
+  if (isWrite && (NonVolatileData::kAddressLogData + logOffset_ + sizeof(Log)) < Fram::kMaxAddress) {
     auto et = static_cast<float>(velocityMap_.GetIndex()) * 0.01f;
     auto vel = odometry_->GetVelocity();
     auto dis = odometry_->GetDisplacement();
@@ -347,8 +349,8 @@ void Trace::UpdateLog() {
     log_.theta = pos.theta;                                         /* 21 Theta */
     log_.markerRight = ms[0];                                       /* 22 Marker Right State */
     log_.markerLeft = ms[1];                                        /* 23 Marker Left State */
-    fram_->Write(logAddress_, &log_, sizeof(Log));
-    logAddress_ += sizeof(Log);
+    fram_->Write(NonVolatileData::kAddressLogData + logOffset_, &log_, sizeof(Log));
+    logOffset_ += sizeof(Log);
   }
 }
 
@@ -375,16 +377,11 @@ void Trace::CalculateVelocityMap(std::vector<RadiusVelocityLimit> &limits, float
  */
 
 /* ログを出力 */
-void Trace::PrintLog(bool force) {
-  uint32_t prevAddress = 0;
-  if (!force && logAddress_ == 0) {
+void Trace::PrintLog() {
+  if (NonVolatileData::ReadLogDataNumBytes(logOffset_)) {
     vTaskDelay(pdMS_TO_TICKS(100));
     ui_->Warn();
     return;
-  }
-  if (force) {
-    prevAddress = logAddress_;
-    logAddress_ = Fram::kMaxAddress;
   }
 
   fputc(2, stdout);
@@ -417,9 +414,9 @@ void Trace::PrintLog(bool force) {
           "\n" /* */
   );
   auto xLastWakeTime = xTaskGetTickCount();
-  for (uint32_t i = 0; i < logAddress_; i += sizeof(Log)) {
+  for (uint32_t i = 0; i < logOffset_; i += sizeof(Log)) {
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1));
-    fram_->Read(i, &log_, sizeof(Log));
+    fram_->Read(NonVolatileData::kAddressLogData + i, &log_, sizeof(Log));
 
     fprintf(stdout,
             "%lx, "                             /* xx Address */
@@ -477,9 +474,6 @@ void Trace::PrintLog(bool force) {
   }
   fputc(3, stdout);
   fflush(stdout);
-  if (force) {
-    logAddress_ = prevAddress;
-  }
 
   ui_->SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
 }

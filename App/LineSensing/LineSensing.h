@@ -17,8 +17,11 @@ class LineSensing final : public Task<LineSensing> {
   /* 初期化 */
   bool Initialize();
 
+  /* 不揮発メモリからキャリブレーション情報を復元 */
+  bool LoadCalibrationData();
+
   /* キャリブレーション */
-  bool Calibrate(uint32_t sampleNum);
+  bool StoreCalibrationData(uint32_t sampleNum);
 
   /* ラインを取得 */
   const LineImpl &Line() { return line_; }
