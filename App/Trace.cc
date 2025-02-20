@@ -102,7 +102,7 @@ void Trace::Run(const Parameter &param) {
   mp_->NotifyStop();
   ls_->NotifyStop();
   ms_->NotifyStop();
-  NonVolatileData::WriteLogDataNumBytes(logOffset_);
+  NonVolatileData::WriteLogDataNumBytes(logBytes_);
   if (state_ == kStateEmergencyStop) {
     ui_->Warn();
   }
@@ -187,7 +187,7 @@ void Trace::OnResetting() {
   /* ログ */
   logFrequencyCount_ = 0;
   log_ = {};
-  logOffset_ = 0;
+  logBytes_ = 0;
   logEnabled_ = false;
 }
 /* スタートマーカーを待つ */
@@ -317,7 +317,7 @@ void Trace::UpdateLog() {
     logFrequencyCount_ = 0;
     isWrite = true;
   }
-  if (isWrite && (NonVolatileData::kAddressLogData + logOffset_ + sizeof(Log)) < Fram::kMaxAddress) {
+  if (isWrite && (NonVolatileData::kAddressLogData + logBytes_ + sizeof(Log)) < Fram::kMaxAddress) {
     auto et = static_cast<float>(velocityMap_.GetIndex()) * 0.01f;
     auto vel = odometry_->GetVelocity();
     auto dis = odometry_->GetDisplacement();
@@ -349,8 +349,8 @@ void Trace::UpdateLog() {
     log_.theta = pos.theta;                                         /* 21 Theta */
     log_.markerRight = ms[0];                                       /* 22 Marker Right State */
     log_.markerLeft = ms[1];                                        /* 23 Marker Left State */
-    fram_->Write(NonVolatileData::kAddressLogData + logOffset_, &log_, sizeof(Log));
-    logOffset_ += sizeof(Log);
+    fram_->Write(NonVolatileData::kAddressLogData + logBytes_, &log_, sizeof(Log));
+    logBytes_ += sizeof(Log);
   }
 }
 
@@ -378,7 +378,7 @@ void Trace::CalculateVelocityMap(std::vector<RadiusVelocityLimit> &limits, float
 
 /* ログを出力 */
 void Trace::PrintLog() {
-  if (NonVolatileData::ReadLogDataNumBytes(logOffset_)) {
+  if (!NonVolatileData::ReadLogDataNumBytes(logBytes_)) {
     vTaskDelay(pdMS_TO_TICKS(100));
     ui_->Warn();
     return;
@@ -414,7 +414,7 @@ void Trace::PrintLog() {
           "\n" /* */
   );
   auto xLastWakeTime = xTaskGetTickCount();
-  for (uint32_t i = 0; i < logOffset_; i += sizeof(Log)) {
+  for (uint32_t i = 0; i < logBytes_; i += sizeof(Log)) {
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(1));
     fram_->Read(NonVolatileData::kAddressLogData + i, &log_, sizeof(Log));
 

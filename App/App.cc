@@ -222,9 +222,6 @@ extern "C" void vAPP_TaskEntry() {
       case 0x0d: {
         trace.PrintPositionCorrectorLog();
       } break;
-      case 0x0e:
-        trace.PrintLog(true);
-        break;
       case 0x1f:
         TestSelectMode();
         break;

@@ -147,7 +147,7 @@ class Trace : public Singleton<Trace> {
   /* ログ */
   Log log_{};                     /* ログ一時バッファ */
   uint32_t logFrequencyCount_{0}; /* ログ出力周期カウンタ */
-  uint32_t logOffset_{0};
+  uint32_t logBytes_{0};
   uint32_t logStartTime_{0};
   bool logEnabled_{false};
 

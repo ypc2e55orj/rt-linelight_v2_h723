@@ -177,9 +177,7 @@ bool ReadPositionCorrectionData(std::vector<float>& crossLineVec, std::vector<fl
 /* ログ数を書き込み */
 bool WriteLogDataNumBytes(uint32_t bytes) {
   auto& fram = Fram::Instance();
-  if (kCapacityLogData < bytes) {
-    return false;
-  }
+  bytes = std::min(bytes, kCapacityLogData);
   if (!fram.Write(kAddressLogDataBytes, &bytes, sizeof(uint32_t))) {
     return false;
   }
@@ -189,14 +187,10 @@ bool WriteLogDataNumBytes(uint32_t bytes) {
 bool ReadLogDataNumBytes(uint32_t& bytes) {
   auto& fram = Fram::Instance();
   uint32_t b = 0;
-
-  if (!fram.Write(kAddressLogDataBytes, &b, sizeof(uint32_t))) {
+  if (!fram.Read(kAddressLogDataBytes, &b, sizeof(uint32_t))) {
     return false;
   }
-  if (kCapacityLogData < b) {
-    return false;
-  }
-  bytes = b;
+  bytes = std::min(b, kCapacityLogData);
   return true;
 }
 }  // namespace NonVolatileData
