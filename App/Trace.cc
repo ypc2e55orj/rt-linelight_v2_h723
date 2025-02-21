@@ -101,11 +101,14 @@ void Trace::Run(const Parameter &param) {
   ls_->NotifyStop();
   ms_->NotifyStop();
   NonVolatileData::WriteLogDataNumBytes(logBytes_);
-  if (state_ == kStateGoaledStopped && param_.mode == kSearchRunning) {
-    velocityMap_.StoreSearchRunningPoints();
-  }
   if (state_ == kStateEmergencyStop) {
     ui_->Warn();
+  } else if (state_ == kStateGoaledStopped) {
+    if (param_.mode == kSearchRunning) {
+      if (!velocityMap_.StoreSearchRunningPoints()) {
+        ui_->Warn();
+      }
+    }
   }
   vTaskDelay(pdMS_TO_TICKS(100));
 }
@@ -500,6 +503,7 @@ void Trace::PrintSearchRunningPoints() {
         fprintf(stdout, "%f\n", curveMarker[point]);
       }
     }
+    vTaskDelay(500);
     fputc(3, stdout);
     fflush(stdout);
   }

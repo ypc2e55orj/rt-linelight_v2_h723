@@ -196,7 +196,7 @@ bool VelocityMapping::LoadSearchRunningPoints() {
   searched_ = false;
   if (!NonVolatileData::ReadVelocityMappingData(deltaDistanceArray_, deltaAngleArray_, numSearchRunningPoints_) ||
       !NonVolatileData::ReadPositionCorrectionData(crossLinePoints_, numCrossLinePoints_, curveMarkerPoints_,
-                                                   numCrossLinePoints_)) {
+                                                   numCurveMarkerPoints_)) {
     return false;
   }
   searched_ = true;

@@ -25,15 +25,15 @@ struct NonVolatileDataAddress {
   /* 2. 曲率記憶 */
   struct VelocityMappingData {
     uint16_t numPoints;
-    std::array<uint16_t, kMappingMaxPoints> deltaDistance; /* [mm] */
-    std::array<uint16_t, kMappingMaxPoints> deltaAngle;    /* [mrad] */
+    std::array<float, kMappingMaxPoints> deltaDistance; /* [m] */
+    std::array<float, kMappingMaxPoints> deltaAngle;    /* [rad] */
   } velocityMapping;
   /* 3. 補正位置 */
   struct PositionCorrectionData {
-    uint16_t numCrossLinePoints;
-    std::array<uint16_t, kCorrectionMaxPoints> crossLine; /* [mm] */
-    uint16_t numCurveMarkerPoints;
-    std::array<uint16_t, kCorrectionMaxPoints> curveMarker; /* [mm] */
+    uint16_t numCrossLinePoints;                         /*  */
+    std::array<float, kCorrectionMaxPoints> crossLine;   /* [m] */
+    uint16_t numCurveMarkerPoints;                       /*  */
+    std::array<float, kCorrectionMaxPoints> curveMarker; /* [m] */
   } positionCorrection;
   /* 4. ログ領域 */
   struct LogData {
