@@ -11,6 +11,9 @@ extern TIM_HandleTypeDef htim23; /* 1kHz (STM32CubeMXで設定) */
 
 /* 初期化 */
 bool Periodic::Initialize() {
+  for (auto &t : tasks_) {
+    t = nullptr;
+  }
   if (HAL_TIM_RegisterCallback(&htim23, HAL_TIM_PERIOD_ELAPSED_CB_ID, PeriodElapsedCallback) != HAL_OK) {
     return false;
   }
@@ -18,18 +21,25 @@ bool Periodic::Initialize() {
 }
 
 /* タスクを追加 */
-void Periodic::Add(TaskHandle_t task) {
+bool Periodic::Add(TaskHandle_t task) {
   std::scoped_lock<Mutex> lock(mtx_);
-  tasks_.push_back(task);
+  for (auto &t : tasks_) {
+    if (t == nullptr) {
+      t = task;
+      return true;
+    }
+  }
+  return false;
 }
 
 /* タスクを削除 */
 bool Periodic::Remove(TaskHandle_t task) {
   std::scoped_lock<Mutex> lock(mtx_);
-  auto it = std::find(tasks_.begin(), tasks_.end(), task);
-  if (it != tasks_.end()) {
-    tasks_.erase(it);
-    return true;
+  for (auto &t : tasks_) {
+    if (t == task) {
+      t = nullptr;
+      return true;
+    }
   }
   return false;
 }

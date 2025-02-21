@@ -10,8 +10,8 @@
 #include "Wrapper/Task.h"
 
 /* C++ */
+#include <array>
 #include <mutex>
-#include <vector>
 
 class Periodic final : public Task<Periodic> {
  public:
@@ -21,7 +21,7 @@ class Periodic final : public Task<Periodic> {
   bool Initialize();
 
   /* タスクを追加 */
-  void Add(TaskHandle_t task);
+  bool Add(TaskHandle_t task);
 
   /* タスクを削除 */
   bool Remove(TaskHandle_t task);
@@ -35,7 +35,7 @@ class Periodic final : public Task<Periodic> {
 
  private:
   Mutex mtx_;
-  std::vector<TaskHandle_t> tasks_;
+  std::array<TaskHandle_t, kMaxTask> tasks_;
 
   /* タイマー割り込みによる通知 */
   static void PeriodElapsedCallback(TIM_HandleTypeDef *);
