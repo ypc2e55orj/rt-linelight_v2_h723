@@ -11,6 +11,7 @@ extern TIM_HandleTypeDef htim23; /* 1kHz (STM32CubeMXで設定) */
 
 /* 初期化 */
 bool Periodic::Initialize() {
+  numTasks_ = 0;
   for (auto &t : tasks_) {
     t = nullptr;
   }
@@ -23,23 +24,10 @@ bool Periodic::Initialize() {
 /* タスクを追加 */
 bool Periodic::Add(TaskHandle_t task) {
   std::scoped_lock<Mutex> lock(mtx_);
-  for (auto &t : tasks_) {
-    if (t == nullptr) {
-      t = task;
-      return true;
-    }
-  }
-  return false;
-}
-
-/* タスクを削除 */
-bool Periodic::Remove(TaskHandle_t task) {
-  std::scoped_lock<Mutex> lock(mtx_);
-  for (auto &t : tasks_) {
-    if (t == task) {
-      t = nullptr;
-      return true;
-    }
+  if (numTasks_ < kMaxTask) {
+    tasks_[numTasks_] = task;
+    numTasks_++;
+    return true;
   }
   return false;
 }
@@ -56,8 +44,8 @@ void Periodic::TaskEntry() {
     }
     if ((notify & kTaskNotifyBitPeriodic) == kTaskNotifyBitPeriodic) {
       std::scoped_lock<Mutex> lock(mtx_);
-      for (auto task : tasks_) {
-        xTaskNotify(task, kTaskNotifyBitPeriodic, eSetBits);
+      for (uint32_t num = 0; num < numTasks_; num++) {
+        xTaskNotify(tasks_[num], kTaskNotifyBitPeriodic, eSetBits);
       }
     }
   }

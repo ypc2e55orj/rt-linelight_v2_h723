@@ -23,9 +23,6 @@ class Periodic final : public Task<Periodic> {
   /* タスクを追加 */
   bool Add(TaskHandle_t task);
 
-  /* タスクを削除 */
-  bool Remove(TaskHandle_t task);
-
   /* 定期通知を待機 */
   static bool WaitPeriodicNotify(TickType_t xTicksToWait = portMAX_DELAY);
 
@@ -36,6 +33,7 @@ class Periodic final : public Task<Periodic> {
  private:
   Mutex mtx_;
   std::array<TaskHandle_t, kMaxTask> tasks_;
+  uint32_t numTasks_;
 
   /* タイマー割り込みによる通知 */
   static void PeriodElapsedCallback(TIM_HandleTypeDef *);
