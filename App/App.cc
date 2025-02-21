@@ -129,15 +129,15 @@ extern "C" void vAPP_TaskEntry() {
         /* 探索走行(非吸引で確実に走る速度、位置精度を向上させるために一応吸う) */
         /* TODO: 加速度を上げる */
         Trace::Parameter param = {
-            Trace::Mode::kExploreRunning, /* モード */
-            1,                            /* ログ周期 [ms] */
-            1.2f,                         /* 探索速度[m/s] */
-            1.0f,                         /* 加速度 [m/ss] */
-            {5.0f, 0.08f, 0.0f},          /* 並進PIDゲイン */
-            {0.6f, 0.02f, 0.0f},          /* 旋回PIDゲイン */
-            {7.0f, 0.0f, 0.01f},          /* ライン追従PIDゲイン */
-            0.1f,                         /* ゴールマーカーから停止までの距離 [m] */
-            2.0f,                         /* 吸引電圧 [V] */
+            Trace::Mode::kSearchRunning, /* モード */
+            1,                           /* ログ周期 [ms] */
+            1.2f,                        /* 探索速度[m/s] */
+            1.0f,                        /* 加速度 [m/ss] */
+            {5.0f, 0.08f, 0.0f},         /* 並進PIDゲイン */
+            {0.6f, 0.02f, 0.0f},         /* 旋回PIDゲイン */
+            {7.0f, 0.0f, 0.01f},         /* ライン追従PIDゲイン */
+            0.1f,                        /* ゴールマーカーから停止までの距離 [m] */
+            2.0f,                        /* 吸引電圧 [V] */
         };
         trace.Run(param);
       } break;
@@ -160,30 +160,30 @@ extern "C" void vAPP_TaskEntry() {
         /* 最短走行(吸引で確実に走る速度、最短走行が成功しない場合にタイムを縮めるために使用) */
         /* TODO: 加速度を上げる */
         Trace::Parameter param = {
-            Trace::Mode::kExploreRunning, /* モード */
-            10,                           /* ログ周期 [ms] */
-            1.5f,                         /* 探索速度[m/s] */
-            1.0f,                         /* 加速度 [m/ss] */
-            {5.0f, 0.08f, 0.0f},          /* 並進PIDゲイン */
-            {0.6f, 0.02f, 0.0f},          /* 旋回PIDゲイン */
-            {7.0f, 0.0f, 0.01f},          /* ライン追従PIDゲイン */
-            0.1f,                         /* ゴールマーカーから停止までの距離 [m] */
-            2.0f,                         /* 吸引電圧 [V] */
+            Trace::Mode::kSearchRunning, /* モード */
+            10,                          /* ログ周期 [ms] */
+            1.5f,                        /* 探索速度[m/s] */
+            1.0f,                        /* 加速度 [m/ss] */
+            {5.0f, 0.08f, 0.0f},         /* 並進PIDゲイン */
+            {0.6f, 0.02f, 0.0f},         /* 旋回PIDゲイン */
+            {7.0f, 0.0f, 0.01f},         /* ライン追従PIDゲイン */
+            0.1f,                        /* ゴールマーカーから停止までの距離 [m] */
+            2.0f,                        /* 吸引電圧 [V] */
         };
         trace.Run(param);
       } break;
       case 0x08: {
         /* (これを本番で使うことはない)最短用ゲイン調整用 */
         Trace::Parameter param = {
-            Trace::Mode::kExploreRunning, /* モード */
-            1,                            /* ログ周期 [ms] */
-            2.0f,                         /* 探索速度[m/s] */
-            10.0f,                        /* 加速度 [m/ss] */
-            {5.0f, 0.08f, 0.0f},          /* 並進PIDゲイン */
-            {0.8f, 0.02f, 0.0f},          /* 旋回PIDゲイン */
-            {13.0f, 0.0f, 0.01f},         /* ライン追従PIDゲイン */
-            0.1f,                         /* ゴールマーカーから停止までの距離 [m] */
-            3.5f,                         /* 吸引電圧 [V] */
+            Trace::Mode::kSearchRunning, /* モード */
+            1,                           /* ログ周期 [ms] */
+            2.0f,                        /* 探索速度[m/s] */
+            10.0f,                       /* 加速度 [m/ss] */
+            {5.0f, 0.08f, 0.0f},         /* 並進PIDゲイン */
+            {0.8f, 0.02f, 0.0f},         /* 旋回PIDゲイン */
+            {13.0f, 0.0f, 0.01f},        /* ライン追従PIDゲイン */
+            0.1f,                        /* ゴールマーカーから停止までの距離 [m] */
+            3.5f,                        /* 吸引電圧 [V] */
         };
         trace.Run(param);
       } break;
@@ -200,27 +200,23 @@ extern "C" void vAPP_TaskEntry() {
             0.1f,                      /* ゴールマーカーから停止までの距離 [m] */
             0.0f,                      /* 吸引電圧 [V] */
         };
-        std::vector<Trace::RadiusVelocityLimit> limits{
-            {0.2f, 0.6f}, /* <R20 , 0.6m/s */
-            {0.4f, 0.7f}, /* <R40 , 0.7m/s */
-            {0.6f, 0.8f}, /* <R60 , 0.8m/s */
-            {0.8f, 0.9f}, /* <R80 , 0.9m/s */
-            {1.0f, 1.0f}, /* <R100, 1.0m/s */
+        std::vector<float> minRadius = {
+            0.2f, 0.4f, 0.6f, 0.8f, 1.0f,
         };
-        trace.CalculateVelocityMap(limits, param.limitVelocity, param.acceleration, param.acceleration, 10);
+        std::vector<float> maxVelocity = {
+            0.6f, 0.7f, 0.8f, 0.9f, 1.0f,
+        };
+        trace.CalculateVelocityMap(minRadius, maxVelocity, param.limitVelocity, param.acceleration, param.acceleration);
         trace.Run(param);
       } break;
       case 0x0a:
         trace.PrintLog();
         break;
       case 0x0b:
-        trace.PrintRadiusExplorerLog();
+        trace.PrintSearchRunningPoints();
         break;
       case 0x0c: {
-        trace.PrintRadiusVelocityLog();
-      } break;
-      case 0x0d: {
-        trace.PrintPositionCorrectorLog();
+        trace.PrintVelocityTable();
       } break;
       case 0x1f:
         TestSelectMode();

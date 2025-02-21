@@ -63,14 +63,18 @@ constexpr float kMarkerDetectThreshold = 0.5f;       /* マーカーセンサー
 constexpr float kMarkerIgnoreOffset = 0.05f;         /* マーカー検知無視オフセット[m] */
 
 /* ライン記憶 */
-constexpr float kMappingLimitLength = 65.0f; /* 最大コース記憶距離[m] */
-constexpr float kMappingDistance = 0.01f;    /* 曲率マップ解像度[m] */
-constexpr float kMappingMaxRadius = 5.0f;    /* 最大曲率半径[m] */
-constexpr float kMappingMinAngle = 0.00001f; /* 最小角度[rad] */
+constexpr float kMappingLimitLength = 65.0f;                       /* 最大コース記憶距離[m] */
+constexpr float kMappingDistance = 0.01f;                          /* 曲率マップ解像度[m] */
+constexpr uint32_t kMappingMaxPoints =                             /*  */
+    static_cast<uint32_t>(kMappingLimitLength / kMappingDistance); /* 記憶点数 */
+constexpr float kMappingMaxRadius = 5.0f;                          /* 最大曲率半径[m] */
+constexpr float kMappingMinAngle = 0.00001f;                       /* 最小角度[rad] */
 
 /* 位置補正 */
 constexpr float kCorrectionAllowErrorCurvature = 0.1f; /* 曲率補正許容誤差 [m] */
 constexpr float kCorrectionAllowErrorCrossLine = 0.1f; /* 交差補正許容誤差 [m] */
+constexpr uint32_t kCorrectionMaxPoints =              /* */
+    static_cast<uint32_t>(kMappingLimitLength / 0.1);  /* 補正点記憶数(コース最大距離/10cm) */
 
 /* UI */
 constexpr uint32_t kButtonShortPressThreshold = 100; /* 短押しきい値[ms] */

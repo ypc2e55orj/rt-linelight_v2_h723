@@ -11,9 +11,8 @@
 #include "LineSensing/LineMarker.h"
 #include "LineSensing/LineSensing.h"
 #include "MotionPlaning/MotionPlaning.h"
-#include "MotionPlaning/PositionCorrector.h"
 #include "MotionPlaning/Suction.h"
-#include "MotionPlaning/VelocityManager.h"
+#include "MotionPlaning/VelocityMapping.h"
 #include "MotionSensing/MotionSensing.h"
 #include "PowerMonitoring/PowerMonitoring.h"
 #include "Ui.h"
@@ -26,7 +25,7 @@ class Trace : public Singleton<Trace> {
  public:
   /* 走行モード */
   enum Mode {
-    kExploreRunning,
+    kSearchRunning,
     kFastRunning,
   };
   /* 走行パラメータ */
@@ -42,8 +41,6 @@ class Trace : public Singleton<Trace> {
     float suctionVoltage;    /* 吸引電圧 [V] */
   };
 
-  using RadiusVelocityLimit = MotionPlaning::VelocityMapGenerator::RadiusVelocityLimit;
-
   /* コンストラクタ */
   Trace();
 
@@ -51,20 +48,17 @@ class Trace : public Singleton<Trace> {
   void Run(const Parameter &param);
 
   /* 速度マップを計算 */
-  void CalculateVelocityMap(std::vector<RadiusVelocityLimit> &limits, float startVelocity, float acceleration,
-                            float deceleration, uint32_t shift);
+  void CalculateVelocityMap(const std::vector<float> &minRadius, const std::vector<float> &maxVelocity,
+                            float startVelocity, float acceleration, float deceleration);
 
   /* ログを出力 */
   void PrintLog();
 
   /* 探索した距離と角度をログとして出力 */
-  void PrintRadiusExplorerLog();
+  void PrintSearchRunningPoints();
 
   /* 計算した加減速をログとして出力 */
-  void PrintRadiusVelocityLog();
-
-  /* 補正位置を出力 */
-  void PrintPositionCorrectorLog();
+  void PrintVelocityTable();
 
  private:
   /* 走行状態 */
@@ -130,12 +124,8 @@ class Trace : public Singleton<Trace> {
   /* リセットタイマー */
   uint32_t resetCount_{0};
 
-  /* 半径算出探索 */
-  MotionPlaning::RadiusExplorer radiusExplorer_;
   /* 加減速生成 */
-  MotionPlaning::VelocityMapGenerator velocityMap_;
-  /* 位置補正器 */
-  MotionPlaning::PositionCorrector positionCorrector_;
+  MotionPlaning::VelocityMapping velocityMap_;
 
   /* 速度・角速度 */
   float acceleration_{0.0f};    /* 加速度 [m/ss] */

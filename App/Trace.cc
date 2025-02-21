@@ -13,10 +13,10 @@
 #include <cstring>
 
 using LineState = LineSensing::LineImpl::State;
-using Landmark = MotionPlaning::PositionCorrector::Landmark;
+using CorrectType = MotionPlaning::VelocityMapping::CorrectType;
 
 /* コンストラクタ */
-Trace::Trace() : velocityMap_(radiusExplorer_) {
+Trace::Trace() {
   ms_ = &MotionSensing::MotionSensing::Instance();
   ls_ = &LineSensing::LineSensing::Instance();
   mp_ = &MotionPlaning::MotionPlaning::Instance();
@@ -38,22 +38,22 @@ void Trace::Run(const Parameter &param) {
   state_ = kStateResetting;
   resetCount_ = 0;
 
-  if (param.mode == Mode::kExploreRunning) {
+  if (param.mode == Mode::kSearchRunning) {
     /* 既に探索済みの場合は警告 */
-    if (radiusExplorer_.IsExplored()) {
+    if (velocityMap_.IsSearched()) {
       ui_->Warn();
       if (!Confirmed()) {
         return;
       }
     }
-    radiusExplorer_.Reset();
+    velocityMap_.ResetSearchRunning();
   } else if (param.mode == Mode::kFastRunning) {
     /* 未探索か速度テーブルが未計算 */
-    if (!velocityMap_.IsGenerated()) {
+    if (!velocityMap_.HasVelocityTable()) {
       ui_->Warn();
       return;
     }
-    velocityMap_.ResetIndex();
+    velocityMap_.ResetFastRunning();
   }
 
   /* パラメータを設定 */
@@ -212,37 +212,22 @@ void Trace::OnStarted() {
 void Trace::OnGoalWaiting() {
   /* 位置補正 */
   auto deltaDistance = odometry_->GetDisplacementTranslateDelta();
-  if (param_.mode == Mode::kExploreRunning) {
+  if (param_.mode == Mode::kSearchRunning) {
     /* 曲率探索 */
     /* 距離と距離単位あたりの角度を保存 */
     auto totalDistance = odometry_->GetDisplacement().trans;
-    radiusExplorer_.Update(deltaDistance, odometry_->GetVelocity().rot);
-
-    /* 位置補正 */
-    /* 記録には補正されていない値を使用すること */
+    velocityMap_.UpdateSearchRunningCurvePoint(deltaDistance, odometry_->GetVelocity().rot);
     if (marker_->IsCurvature()) { /* とりあえず曲率マーカーを優先 どっちの方が正確？ */
-      positionCorrector_.Store(Landmark::kCurvatureMark, totalDistance);
+      velocityMap_.AddSearchRunningCorrectPoint(CorrectType::kCurveMarker, totalDistance);
     } else if (line_->IsCrossPassed()) {
-      positionCorrector_.Store(Landmark::kCrossLine, totalDistance);
+      velocityMap_.AddSearchRunningCorrectPoint(CorrectType::kCrossLine, totalDistance);
     }
   } else if (param_.mode == Mode::kFastRunning) {
     /* 走行制御 */
     /* 最短時は生成したテーブルから速度を索引 */
-    velocityMap_.UpdateDistance(deltaDistance);
-    auto totalDistance = velocityMap_.GetTotalDistance();
-    { /* 位置補正 */
-      float correctedDistance = 0.0f;
-      if (marker_->IsCurvature()) {
-        correctedDistance = positionCorrector_.Correct(Landmark::kCurvatureMark, totalDistance);
-        velocityMap_.CorrectDistance(correctedDistance);
-      } else if (line_->IsCrossPassed()) {
-        correctedDistance = positionCorrector_.Correct(Landmark::kCrossLine, totalDistance);
-        velocityMap_.CorrectDistance(correctedDistance);
-      }
-    }
-    velocityMap_.UpdateIndex();
-    auto now = velocityMap_.GetVelocity();
-    auto next = velocityMap_.GetNextVelocity();
+    velocityMap_.UpdateFastRunning(deltaDistance, line_->IsCrossPassed(), marker_->IsCurvature());
+    float now = 0.0f, next = 0.0f;
+    velocityMap_.GetFastRunningVelocity(now, next);
     if (next < now) {
       maxVelocity_ = std::abs(now);
       acceleration_ = -1.0f * param_.acceleration;
@@ -271,9 +256,8 @@ void Trace::OnGoaled() {
   ui_->SetIndicator(0x00, 0x60);
 
   /* 曲率探索 */
-  if (param_.mode == Mode::kExploreRunning) {
-    radiusExplorer_.Explored();
-    velocityMap_.ResetGenerated();
+  if (param_.mode == Mode::kSearchRunning) {
+    velocityMap_.SuccessSearchRunning();
   }
 
   /* 走行制御 */
@@ -318,52 +302,45 @@ void Trace::UpdateLog() {
     isWrite = true;
   }
   if (isWrite && (NonVolatileData::kAddressLogData + logBytes_ + sizeof(Log)) < Fram::kMaxAddress) {
-    auto et = static_cast<float>(velocityMap_.GetIndex()) * 0.01f;
     auto vel = odometry_->GetVelocity();
     auto dis = odometry_->GetDisplacement();
     auto vol = servo_->GetMotorVoltage();
     auto cur = power_->GetMotorCurrent();
     auto pos = odometry_->GetPose();
     auto ms = marker_->GetState();
-    log_.time = HAL_GetTick() - logStartTime_;                      /* 00 Time */
-    log_.line = line_->GetState();                                  /* 01 Line State */
-    log_.commandVelocity = velocity_;                               /* 02 Command Velocity */
-    log_.estimateVelocity = vel.trans;                              /* 03 Estimate Velocity */
-    log_.expectTranslate = et;                                      /* 04 Expect Translate */
-    log_.estimateTranslate = dis.trans;                             /* 05 Estimate Translate */
-    log_.correctedTranslate = velocityMap_.GetTotalDistance();      /* 06 Corrected Translate */
-    log_.errorAngle = line_->GetError();                            /* 07 Error Angle */
-    log_.commandAngularVelocity = lineErrorPid_.Get();              /* 08 Command Angular Velocity */
-    log_.commandAngularVelocityP = lineErrorPid_.GetProportional(); /* 09 Command Angular Velocity (P) */
-    log_.commandAngularVelocityI = lineErrorPid_.GetIntegral();     /* 10 Command Angular Velocity (I) */
-    log_.commandAngularVelocityD = lineErrorPid_.GetDerivative();   /* 11 Command Angular Velocity (D) */
-    log_.estimateAngularVelocity = vel.rot;                         /* 12 Estimate Angular Velocity */
-    log_.estimateRotate = dis.rot;                                  /* 13 Estimate Rotate */
-    log_.batteryVoltage = power_->GetBatteryVoltage();              /* 14 Battery Voltage */
-    log_.motorVoltageRight = vol[0];                                /* 15 Motor Voltage Right */
-    log_.motorVoltageLeft = vol[1];                                 /* 16 Motor Voltage Left */
-    log_.motorCurrentRight = cur[0];                                /* 17 Motor Current Right */
-    log_.motorCurrentLeft = cur[1];                                 /* 18 Motor Current Left */
-    log_.x = pos.x;                                                 /* 19 X */
-    log_.y = pos.y;                                                 /* 20 Y */
-    log_.theta = pos.theta;                                         /* 21 Theta */
-    log_.markerRight = ms[0];                                       /* 22 Marker Right State */
-    log_.markerLeft = ms[1];                                        /* 23 Marker Left State */
+    log_.time = HAL_GetTick() - logStartTime_;                       /* 00 Time */
+    log_.line = line_->GetState();                                   /* 01 Line State */
+    log_.commandVelocity = velocity_;                                /* 02 Command Velocity */
+    log_.estimateVelocity = vel.trans;                               /* 03 Estimate Velocity */
+    log_.expectTranslate = 0.0f;                                     /* 04 Expect Translate */
+    log_.estimateTranslate = dis.trans;                              /* 05 Estimate Translate */
+    log_.correctedTranslate = velocityMap_.GetFastRunningDistance(); /* 06 Corrected Translate */
+    log_.errorAngle = line_->GetError();                             /* 07 Error Angle */
+    log_.commandAngularVelocity = lineErrorPid_.Get();               /* 08 Command Angular Velocity */
+    log_.commandAngularVelocityP = lineErrorPid_.GetProportional();  /* 09 Command Angular Velocity (P) */
+    log_.commandAngularVelocityI = lineErrorPid_.GetIntegral();      /* 10 Command Angular Velocity (I) */
+    log_.commandAngularVelocityD = lineErrorPid_.GetDerivative();    /* 11 Command Angular Velocity (D) */
+    log_.estimateAngularVelocity = vel.rot;                          /* 12 Estimate Angular Velocity */
+    log_.estimateRotate = dis.rot;                                   /* 13 Estimate Rotate */
+    log_.batteryVoltage = power_->GetBatteryVoltage();               /* 14 Battery Voltage */
+    log_.motorVoltageRight = vol[0];                                 /* 15 Motor Voltage Right */
+    log_.motorVoltageLeft = vol[1];                                  /* 16 Motor Voltage Left */
+    log_.motorCurrentRight = cur[0];                                 /* 17 Motor Current Right */
+    log_.motorCurrentLeft = cur[1];                                  /* 18 Motor Current Left */
+    log_.x = pos.x;                                                  /* 19 X */
+    log_.y = pos.y;                                                  /* 20 Y */
+    log_.theta = pos.theta;                                          /* 21 Theta */
+    log_.markerRight = ms[0];                                        /* 22 Marker Right State */
+    log_.markerLeft = ms[1];                                         /* 23 Marker Left State */
     fram_->Write(NonVolatileData::kAddressLogData + logBytes_, &log_, sizeof(Log));
     logBytes_ += sizeof(Log);
   }
 }
 
 /* 速度マップを計算 */
-void Trace::CalculateVelocityMap(std::vector<RadiusVelocityLimit> &limits, float startVelocity, float acceleration,
-                                 float deceleration, uint32_t shift) {
-  if (velocityMap_.IsGenerated()) {
-    ui_->Warn();
-    if (!Confirmed()) {
-      return;
-    }
-  }
-  if (!velocityMap_.Generate(limits, startVelocity, acceleration, deceleration, shift)) {
+void Trace::CalculateVelocityMap(const std::vector<float> &minRadius, const std::vector<float> &maxVelocity,
+                                 float startVelocity, float acceleration, float deceleration) {
+  if (!velocityMap_.CalculatVelocityTable(minRadius, maxVelocity, startVelocity, acceleration, deceleration)) {
     ui_->Warn();
     return;
   }
@@ -479,63 +456,62 @@ void Trace::PrintLog() {
 }
 
 /* 加減速生成用のログを出力 */
-void Trace::PrintRadiusExplorerLog() {
-  auto &veloMap = radiusExplorer_.Get();
-  if (!radiusExplorer_.IsExplored()) {
+void Trace::PrintSearchRunningPoints() {
+  if (!velocityMap_.IsSearched()) {
     ui_->Warn();
     return; /* 未探索 */
   }
 
-  fputc(2, stdout);
-  for (auto &l : veloMap) {
-    fprintf(stdout, "%f, %f\n", l.distance, l.yaw);
+  printf("Transfer SearchRunningPoints (deltaDistance, deltaAngle)");
+  {
+    auto &deltaDistance = velocityMap_.GetDeltaDistanceArray();
+    auto &deltaAngle = velocityMap_.GetDeltaAngleArray();
+    fflush(stdout);
+    fputc(2, stdout);
+    for (uint16_t point = 0; point < velocityMap_.GetSearchRunningNumPoints(); point++) {
+      fprintf(stdout, "%f, %f\n", deltaDistance[point], deltaAngle[point]);
+    }
+    fputc(3, stdout);
+    fflush(stdout);
   }
-  fputc(3, stdout);
-  fflush(stdout);
+  vTaskDelay(500);
+  printf("Transfer CorrectionPoints (CrossLine)");
+  {
+    fflush(stdout);
+    fputc(2, stdout);
+    uint16_t numCrossLine = 0;
+    auto &crossLine = velocityMap_.GetCrossLinePoints(numCrossLine);
+    if (numCrossLine > 0) {
+      for (uint16_t point = 0; point < numCrossLine; point++) {
+        fprintf(stdout, "%f\n", crossLine[point]);
+      }
+    }
+    uint16_t numCurveMarker = 0;
+    auto &curveMarker = velocityMap_.GetCurveMarkerPoints(numCurveMarker);
+    if (numCurveMarker > 0) {
+      for (uint16_t point = 0; point < numCurveMarker; point++) {
+        fprintf(stdout, "%f\n", curveMarker[point]);
+      }
+    }
+    fputc(3, stdout);
+    fflush(stdout);
+  }
 
   ui_->SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
 }
 
 /* 計算した加減速をログとして出力 */
-void Trace::PrintRadiusVelocityLog() {
-  auto &veloMap = velocityMap_.Get();
-  if (!velocityMap_.IsGenerated()) {
+void Trace::PrintVelocityTable() {
+  if (!velocityMap_.HasVelocityTable()) {
     ui_->Warn();
     return; /* 未計算 */
   }
 
+  auto &table = velocityMap_.GetVelocityTable();
   fputc(2, stdout);
-  for (auto &v : veloMap) {
-    fprintf(stdout, "%f\n", v);
+  for (auto &t : table) {
+    fprintf(stdout, "%f\n", t);
   }
-  fputc(3, stdout);
-  fflush(stdout);
-  ui_->SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
-}
-
-/* 補正位置を出力 */
-void Trace::PrintPositionCorrectorLog() {
-  fputc(2, stdout);
-  {
-    auto &cur = positionCorrector_.Get(Landmark::kCurvatureMark);
-    fprintf(stdout, "Curvature:\n");
-    if (cur.size() > 0) {
-      for (auto &c : cur) {
-        fprintf(stdout, "%f\n", c);
-      }
-    }
-  }
-  ui_->SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
-  {
-    auto &cro = positionCorrector_.Get(Landmark::kCrossLine);
-    fprintf(stdout, "Cross:\n");
-    if (cro.size() > 0) {
-      for (auto &c : cro) {
-        fprintf(stdout, "%f\n", c);
-      }
-    }
-  }
-  vTaskDelay(pdMS_TO_TICKS(1000));
   fputc(3, stdout);
   fflush(stdout);
   ui_->SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);

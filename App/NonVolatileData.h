@@ -5,19 +5,12 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <vector>
 
 /* Project */
 #include "Config.h"
 #include "Fram.h"
 
 namespace NonVolatileData {
-/* 記憶サイズ */
-static constexpr uint32_t kCapacityVelocityMapping =               /* コース記憶ポイント数 */
-    static_cast<uint32_t>(kMappingLimitLength / kMappingDistance); /* */
-static constexpr uint32_t kCapacityPositionCorrection =            /* 曲率変化記憶数(コース最大距離/10cm) */
-    static_cast<uint32_t>(kMappingLimitLength / 0.1);              /* */
-
 /* 不揮発メモリのアドレス算出構造体 */
 #pragma pack(push, 1)
 struct NonVolatileDataAddress {
@@ -31,16 +24,16 @@ struct NonVolatileDataAddress {
   } sensorCalibration;
   /* 2. 曲率記憶 */
   struct VelocityMappingData {
-    uint16_t num;
-    uint16_t deltaDistance[kCapacityVelocityMapping]; /* [mm] */
-    uint16_t accYaw[kCapacityVelocityMapping];        /* [mrad] */
+    uint16_t numPoints;
+    std::array<uint16_t, kMappingMaxPoints> deltaDistance; /* [mm] */
+    std::array<uint16_t, kMappingMaxPoints> deltaAngle;    /* [mrad] */
   } velocityMapping;
   /* 3. 補正位置 */
   struct PositionCorrectionData {
-    uint16_t crossLineNum;
-    uint16_t crossLine[kCapacityPositionCorrection]; /* [mm] */
-    uint16_t curveMarkerNum;
-    uint16_t curveMarker[kCapacityPositionCorrection]; /* [mm] */
+    uint16_t numCrossLinePoints;
+    std::array<uint16_t, kCorrectionMaxPoints> crossLine; /* [mm] */
+    uint16_t numCurveMarkerPoints;
+    std::array<uint16_t, kCorrectionMaxPoints> curveMarker; /* [mm] */
   } positionCorrection;
   /* 4. ログ領域 */
   struct LogData {
@@ -62,17 +55,19 @@ static constexpr uint32_t kAddressSensorCalibrationDataLineCoeff =
 static constexpr uint32_t kAddressSensorCalibrationDataMarkerMax =
     offsetof(NonVolatileDataAddress, sensorCalibration.markerMax);
 /* 2. 曲率記憶 */
-static constexpr uint32_t kAddressVelocityMappingDataNum = offsetof(NonVolatileDataAddress, velocityMapping.num);
+static constexpr uint32_t kAddressVelocityMappingDataNumPoints =
+    offsetof(NonVolatileDataAddress, velocityMapping.numPoints);
 static constexpr uint32_t kAddressVelocityMappingDataDeltaDistance =
     offsetof(NonVolatileDataAddress, velocityMapping.deltaDistance);
-static constexpr uint32_t kAddressVelocityMappingDataAccYaw = offsetof(NonVolatileDataAddress, velocityMapping.accYaw);
+static constexpr uint32_t kAddressVelocityMappingDataDeltaAngle =
+    offsetof(NonVolatileDataAddress, velocityMapping.deltaAngle);
 /* 3. 補正位置 */
-static constexpr uint32_t kAddressPositionCorrectionDataCrossLineNum =
-    offsetof(NonVolatileDataAddress, positionCorrection.crossLineNum);
+static constexpr uint32_t kAddressPositionCorrectionDataNumCrossLinePoints =
+    offsetof(NonVolatileDataAddress, positionCorrection.numCrossLinePoints);
 static constexpr uint32_t kAddressPositionCorrectionDataCrossLine =
     offsetof(NonVolatileDataAddress, positionCorrection.crossLine);
-static constexpr uint32_t kAddressPositionCorrectionDataCurveMarkerNum =
-    offsetof(NonVolatileDataAddress, positionCorrection.curveMarkerNum);
+static constexpr uint32_t kAddressPositionCorrectionDataNumCurveMarkerPoints =
+    offsetof(NonVolatileDataAddress, positionCorrection.numCurveMarkerPoints);
 static constexpr uint32_t kAddressPositionCorrectionDataCurveMarker =
     offsetof(NonVolatileDataAddress, positionCorrection.curveMarker);
 /* 4. ログ領域 */
@@ -88,13 +83,21 @@ bool ReadLineSensorCalibrationData(std::array<uint16_t, 16>& lineMin, std::array
                                    std::array<float, 16>& lineCoeff, std::array<uint16_t, 2>& markerMax);
 
 /* 曲率を書き込み */
-bool WriteVelocityMappingData(const std::vector<float>& deltaDistanceVec, const std::vector<float>& accYawRateVec);
+bool WriteVelocityMappingData(const std::array<float, kMappingMaxPoints>& deltaDistanceArray,
+                              const std::array<float, kMappingMaxPoints>& deltaAngleArray, uint16_t numPoints);
 /* 曲率を読み出し */
-bool ReadVelocityMappingData(std::vector<float>& deltaDistanceVec, std::vector<float>& accYawRateVec);
+bool ReadVelocityMappingData(std::array<float, kMappingMaxPoints>& deltaDistanceArray,
+                             std::array<float, kMappingMaxPoints>& deltaAngleArray, uint16_t& numPoints);
 /* 補正位置を書き込み */
-bool WritePositionCorrectionData(const std::vector<float>& crossLineVec, const std::vector<float>& curveMarkerVec);
+bool WritePositionCorrectionData(const std::array<float, kCorrectionMaxPoints>& crossLineArray,
+                                 uint16_t numCrossLinePoints,
+                                 const std::array<float, kCorrectionMaxPoints>& curveMarkerArray,
+                                 uint16_t numCurveMarkerPoints);
 /* 補正位置を読み出し */
-bool ReadPositionCorrectionData(std::vector<float>& crossLineVec, std::vector<float>& curveMarkerVec);
+bool ReadPositionCorrectionData(std::array<float, kCorrectionMaxPoints>& crossLineArray, uint16_t& numCrossLinePoints,
+                                std::array<float, kCorrectionMaxPoints>& curveMarkerArray,
+                                uint16_t& numCurveMarkerPoints);
+
 /* ログ数を書き込み */
 bool WriteLogDataNumBytes(uint32_t bytes);
 /* ログ数を読み出し */
