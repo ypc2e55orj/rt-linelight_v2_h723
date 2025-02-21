@@ -47,6 +47,9 @@ class Trace : public Singleton<Trace> {
   /* 走行 */
   void Run(const Parameter &param);
 
+  /* 不揮発メモリから探索データを読み込み */
+  void LoadSearchData();
+
   /* 速度マップを計算 */
   void CalculateVelocityMap(const std::vector<float> &minRadius, const std::vector<float> &maxVelocity,
                             float startVelocity, float acceleration, float deceleration);

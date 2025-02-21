@@ -37,8 +37,11 @@ void Trace::Run(const Parameter &param) {
   /* リセット */
   state_ = kStateResetting;
   resetCount_ = 0;
+  param_ = param;
+  lineErrorPid_.Reset(param_.lineErrorGain);
+  servo_->SetGain(param_.linearGain, param_.angularGain);
 
-  if (param.mode == Mode::kSearchRunning) {
+  if (param_.mode == Mode::kSearchRunning) {
     /* 既に探索済みの場合は警告 */
     if (velocityMap_.IsSearched()) {
       ui_->Warn();
@@ -47,7 +50,7 @@ void Trace::Run(const Parameter &param) {
       }
     }
     velocityMap_.ResetSearchRunning();
-  } else if (param.mode == Mode::kFastRunning) {
+  } else if (param_.mode == Mode::kFastRunning) {
     /* 未探索か速度テーブルが未計算 */
     if (!velocityMap_.HasVelocityTable()) {
       ui_->Warn();
@@ -55,11 +58,6 @@ void Trace::Run(const Parameter &param) {
     }
     velocityMap_.ResetFastRunning();
   }
-
-  /* パラメータを設定 */
-  param_ = param;
-  lineErrorPid_.Reset(param_.lineErrorGain);
-  servo_->SetGain(param_.linearGain, param_.angularGain);
 
   /* 手が離れるまで待つ */
   vTaskDelay(pdMS_TO_TICKS(1000));
@@ -103,6 +101,9 @@ void Trace::Run(const Parameter &param) {
   ls_->NotifyStop();
   ms_->NotifyStop();
   NonVolatileData::WriteLogDataNumBytes(logBytes_);
+  if (state_ == kStateGoaledStopped && param_.mode == kSearchRunning) {
+    velocityMap_.StoreSearchRunningPoints();
+  }
   if (state_ == kStateEmergencyStop) {
     ui_->Warn();
   }
@@ -337,12 +338,18 @@ void Trace::UpdateLog() {
   }
 }
 
+/* 不揮発メモリから探索データを読み込み */
+void Trace::LoadSearchData() {
+  if (!velocityMap_.LoadSearchRunningPoints()) {
+    ui_->Warn();
+  }
+}
+
 /* 速度マップを計算 */
 void Trace::CalculateVelocityMap(const std::vector<float> &minRadius, const std::vector<float> &maxVelocity,
                                  float startVelocity, float acceleration, float deceleration) {
   if (!velocityMap_.CalculatVelocityTable(minRadius, maxVelocity, startVelocity, acceleration, deceleration)) {
     ui_->Warn();
-    return;
   }
 }
 

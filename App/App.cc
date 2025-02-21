@@ -218,6 +218,9 @@ extern "C" void vAPP_TaskEntry() {
       case 0x0c: {
         trace.PrintVelocityTable();
       } break;
+      case 0x0d: {
+        trace.LoadSearchData();
+      } break;
       case 0x1f:
         TestSelectMode();
         break;
