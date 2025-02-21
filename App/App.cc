@@ -142,22 +142,7 @@ extern "C" void vAPP_TaskEntry() {
         trace.Run(param);
       } break;
       case 0x02: {
-      } break;
-      case 0x03: {
-      } break;
-      case 0x04: {
-      } break;
-      case 0x05: {
-      } break;
-      case 0x06: {
-        /* ラインセンサーのキャリブレーション */
-        if (!LineSensing::LineSensing::Instance().StoreCalibrationData(2000)) {
-          ui.Fatal();
-        }
-        ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
-      } break;
-      case 0x07: {
-        /* 最短走行(吸引で確実に走る速度、最短走行が成功しない場合にタイムを縮めるために使用) */
+        /* 探索走行(吸引で確実に走る速度、最短走行が成功しない場合にタイムを縮めるために使用) */
         /* TODO: 加速度を上げる */
         Trace::Parameter param = {
             Trace::Mode::kSearchRunning, /* モード */
@@ -172,8 +157,8 @@ extern "C" void vAPP_TaskEntry() {
         };
         trace.Run(param);
       } break;
-      case 0x08: {
-        /* (これを本番で使うことはない)最短用ゲイン調整用 */
+      case 0x03: {
+        /* 探索走行(吸引で確実に走る速度、最短走行が成功しない場合にタイムを縮めるために使用・最短ゲイン調整用) */
         Trace::Parameter param = {
             Trace::Mode::kSearchRunning, /* モード */
             1,                           /* ログ周期 [ms] */
@@ -183,11 +168,44 @@ extern "C" void vAPP_TaskEntry() {
             {0.8f, 0.02f, 0.0f},         /* 旋回PIDゲイン */
             {13.0f, 0.0f, 0.01f},        /* ライン追従PIDゲイン */
             0.1f,                        /* ゴールマーカーから停止までの距離 [m] */
-            3.5f,                        /* 吸引電圧 [V] */
+            4.0f,                        /* 吸引電圧 [V] */
         };
         trace.Run(param);
       } break;
+      case 0x04: {
+        /* 最短走行1 */
+      } break;
+      case 0x05: {
+        /* 最短走行2 */
+      } break;
+      case 0x06: {
+        /* 最短走行3 */
+      } break;
+      case 0x07: {
+        /* 最短走行4 */
+      } break;
+      case 0x08: {
+        /* ラインセンサーのキャリブレーション */
+        if (!LineSensing::LineSensing::Instance().StoreCalibrationData(2000)) {
+          ui.Warn();
+        }
+        ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
+      } break;
       case 0x09: {
+        /* 探索データをFRAMから復元 */
+        trace.LoadSearchRunningPoints();
+        ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
+      } break;
+      case 0x0a:
+        trace.PrintLog();
+        break;
+      case 0x0b:
+        trace.PrintSearchRunningPoints();
+        break;
+      case 0x0c: {
+        trace.PrintVelocityTable();
+      } break;
+      case 0x10: {
         /* (これを本番で使うことはない)最短走行アルゴリズム調整用 */
         Trace::Parameter param = {
             Trace::Mode::kFastRunning, /* モード */
@@ -208,18 +226,6 @@ extern "C" void vAPP_TaskEntry() {
         };
         trace.CalculateVelocityMap(minRadius, maxVelocity, param.limitVelocity, param.acceleration, param.acceleration);
         trace.Run(param);
-      } break;
-      case 0x0a:
-        trace.PrintLog();
-        break;
-      case 0x0b:
-        trace.PrintSearchRunningPoints();
-        break;
-      case 0x0c: {
-        trace.PrintVelocityTable();
-      } break;
-      case 0x0d: {
-        trace.LoadSearchData();
       } break;
       case 0x1f:
         TestSelectMode();

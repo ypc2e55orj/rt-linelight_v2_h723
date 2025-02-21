@@ -342,7 +342,7 @@ void Trace::UpdateLog() {
 }
 
 /* 不揮発メモリから探索データを読み込み */
-void Trace::LoadSearchData() {
+void Trace::LoadSearchRunningPoints() {
   if (!velocityMap_.LoadSearchRunningPoints()) {
     ui_->Warn();
   }
