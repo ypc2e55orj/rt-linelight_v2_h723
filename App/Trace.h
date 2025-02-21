@@ -34,6 +34,7 @@ class Trace : public Singleton<Trace> {
     uint32_t logInterval;    /* ログ出力周期 [ms] */
     float limitVelocity;     /* 探索時制限速度・最短時初期速度 [m/s] */
     float acceleration;      /* 加速度 [m/ss] */
+    float deceleration;      /* 減速度 [m/ss] */
     Pid::Gain linearGain;    /* 並進PIDゲイン */
     Pid::Gain angularGain;   /* 旋回PIDゲイン */
     Pid::Gain lineErrorGain; /* ライン追従PIDゲイン */

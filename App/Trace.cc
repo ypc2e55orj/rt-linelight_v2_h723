@@ -234,7 +234,7 @@ void Trace::OnGoalWaiting() {
     velocityMap_.GetFastRunningVelocity(now, next);
     if (next < now) {
       maxVelocity_ = std::abs(now);
-      acceleration_ = -1.0f * param_.acceleration;
+      acceleration_ = -1.0f * param_.deceleration;
     } else { /* next > now */
       maxVelocity_ = std::abs(next);
       acceleration_ = param_.acceleration;
@@ -283,7 +283,7 @@ void Trace::UpdateMotion() {
   }
   /* 設定された制限速度を元に加減速した速度を計算 */
   velocity_ += acceleration_ * kPeriodicNotifyInterval;
-  if (std::abs(velocity_) > maxVelocity_) {
+  if (maxVelocity_ < velocity_) {
     velocity_ = std::copysign(maxVelocity_, velocity_);
   }
   /* ライン追従角速度を計算 */

@@ -132,11 +132,12 @@ extern "C" void vAPP_TaskEntry() {
             Trace::Mode::kSearchRunning, /* モード */
             1,                           /* ログ周期 [ms] */
             1.2f,                        /* 探索速度[m/s] */
-            1.0f,                        /* 加速度 [m/ss] */
+            5.0f,                        /* 加速度 [m/ss] */
+            5.0f,                        /* 減速度 [m/ss] */
             {5.0f, 0.08f, 0.0f},         /* 並進PIDゲイン */
             {0.6f, 0.02f, 0.0f},         /* 旋回PIDゲイン */
             {7.0f, 0.0f, 0.01f},         /* ライン追従PIDゲイン */
-            0.1f,                        /* ゴールマーカーから停止までの距離 [m] */
+            0.2f,                        /* ゴールマーカーから停止までの距離 [m] */
             2.0f,                        /* 吸引電圧 [V] */
         };
         trace.Run(param);
@@ -148,32 +149,56 @@ extern "C" void vAPP_TaskEntry() {
             Trace::Mode::kSearchRunning, /* モード */
             10,                          /* ログ周期 [ms] */
             1.5f,                        /* 探索速度[m/s] */
-            1.0f,                        /* 加速度 [m/ss] */
+            5.0f,                        /* 加速度 [m/ss] */
+            5.0f,                        /* 減速度 [m/ss] */
             {5.0f, 0.08f, 0.0f},         /* 並進PIDゲイン */
             {0.6f, 0.02f, 0.0f},         /* 旋回PIDゲイン */
             {7.0f, 0.0f, 0.01f},         /* ライン追従PIDゲイン */
-            0.1f,                        /* ゴールマーカーから停止までの距離 [m] */
+            0.2f,                        /* ゴールマーカーから停止までの距離 [m] */
             2.0f,                        /* 吸引電圧 [V] */
         };
         trace.Run(param);
       } break;
       case 0x03: {
-        /* 探索走行(吸引で確実に走る速度、最短走行が成功しない場合にタイムを縮めるために使用・最短ゲイン調整用) */
+        /* 探索走行(吸引で大体走る速度、最短走行が成功しない場合にタイムを縮めるために使用・最短ゲイン調整用) */
         Trace::Parameter param = {
             Trace::Mode::kSearchRunning, /* モード */
             1,                           /* ログ周期 [ms] */
             2.0f,                        /* 探索速度[m/s] */
             10.0f,                       /* 加速度 [m/ss] */
+            10.0f,                       /* 減速度 [m/ss] */
             {5.0f, 0.08f, 0.0f},         /* 並進PIDゲイン */
             {0.8f, 0.02f, 0.0f},         /* 旋回PIDゲイン */
             {13.0f, 0.0f, 0.01f},        /* ライン追従PIDゲイン */
-            0.1f,                        /* ゴールマーカーから停止までの距離 [m] */
+            0.2f,                        /* ゴールマーカーから停止までの距離 [m] */
             4.0f,                        /* 吸引電圧 [V] */
         };
         trace.Run(param);
       } break;
       case 0x04: {
         /* 最短走行1 */
+        std::vector<float> minRadius = {
+            /* 曲率マップ */
+            0.4f, 0.5f, 0.65f, 1.5f, 2.0f, 5.0f,
+        };
+        std::vector<float> maxVelocity = {
+            /* 速度マップ */
+            1.0f, 1.5f, 2.0f, 2.5f, 3.0f, 3.5f,
+        };
+        Trace::Parameter param = {
+            Trace::Mode::kFastRunning, /* モード */
+            1,                         /* ログ周期 [ms] */
+            2.0f,                      /* 探索速度[m/s] */
+            6.0f,                      /* 加速度 [m/ss] */
+            6.0f,                      /* 減速度 [m/ss] */
+            {5.0f, 0.08f, 0.0f},       /* 並進PIDゲイン */
+            {0.8f, 0.02f, 0.0f},       /* 旋回PIDゲイン */
+            {4.5f, 0.0f, 0.005f},      /* ライン追従PIDゲイン */
+            0.2f,                      /* ゴールマーカーから停止までの距離 [m] */
+            3.0f,                      /* 吸引電圧 [V] */
+        };
+        trace.CalculateVelocityMap(minRadius, maxVelocity, param.limitVelocity, param.acceleration, param.deceleration);
+        trace.Run(param);
       } break;
       case 0x05: {
         /* 最短走行2 */
@@ -206,16 +231,17 @@ extern "C" void vAPP_TaskEntry() {
         trace.PrintVelocityTable();
       } break;
       case 0x10: {
-        /* (これを本番で使うことはない)最短走行アルゴリズム調整用 */
+        /* (これを本番で使うことはない)最短走行調整用 */
         Trace::Parameter param = {
             Trace::Mode::kFastRunning, /* モード */
             10,                        /* ログ周期 [ms] */
             1.0f,                      /* 探索速度[m/s] */
             5.0f,                      /* 加速度 [m/ss] */
+            5.0f,                      /* 減速度 [m/ss] */
             {5.0f, 0.08f, 0.0f},       /* 並進PIDゲイン */
             {0.6f, 0.02f, 0.0f},       /* 旋回PIDゲイン */
             {7.0f, 0.0f, 0.01f},       /* ライン追従PIDゲイン */
-            0.1f,                      /* ゴールマーカーから停止までの距離 [m] */
+            0.2f,                      /* ゴールマーカーから停止までの距離 [m] */
             0.0f,                      /* 吸引電圧 [V] */
         };
         std::vector<float> minRadius = {
