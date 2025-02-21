@@ -69,6 +69,8 @@ class VelocityMapping {
   void GetFastRunningVelocity(float &now, float &next);
   /* 走行位置を取得 */
   float GetFastRunningDistance();
+  /* 参照している速度テーブルのインデックスを取得 */
+  uint16_t GetFastRunningPoint();
 
  private:
   /* 探索 */

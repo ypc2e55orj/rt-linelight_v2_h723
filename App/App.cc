@@ -209,10 +209,10 @@ extern "C" void vAPP_TaskEntry() {
         /* (これを本番で使うことはない)最短走行アルゴリズム調整用 */
         Trace::Parameter param = {
             Trace::Mode::kFastRunning, /* モード */
-            5,                         /* ログ周期 [ms] */
-            1.0f,                      /* 開始速度[m/s] */
+            10,                        /* ログ周期 [ms] */
+            1.0f,                      /* 探索速度[m/s] */
             5.0f,                      /* 加速度 [m/ss] */
-            {5.0f, 0.01f, 0.0f},       /* 並進PIDゲイン */
+            {5.0f, 0.08f, 0.0f},       /* 並進PIDゲイン */
             {0.6f, 0.02f, 0.0f},       /* 旋回PIDゲイン */
             {7.0f, 0.0f, 0.01f},       /* ライン追従PIDゲイン */
             0.1f,                      /* ゴールマーカーから停止までの距離 [m] */
@@ -222,7 +222,7 @@ extern "C" void vAPP_TaskEntry() {
             0.2f, 0.4f, 0.6f, 0.8f, 1.0f,
         };
         std::vector<float> maxVelocity = {
-            0.6f, 0.7f, 0.8f, 0.9f, 1.0f,
+            1.0f, 1.25f, 1.5f, 1.75f, 2.0f,
         };
         trace.CalculateVelocityMap(minRadius, maxVelocity, param.limitVelocity, param.acceleration, param.acceleration);
         trace.Run(param);

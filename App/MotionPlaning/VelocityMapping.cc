@@ -185,11 +185,14 @@ void VelocityMapping::UpdateFastRunning(float deltaDistance,                 /* 
 }
 /* 速度を取得 */
 void VelocityMapping::GetFastRunningVelocity(float &now, float &next) {
-  now = velocityVec_[fastRunningPoint_];
-  next = velocityVec_[std::min(static_cast<uint16_t>(fastRunningPoint_ + 1), numSearchRunningPoints_)];
+  now = velocityVec_[std::min(fastRunningPoint_, static_cast<uint16_t>(numSearchRunningPoints_ - 1))];
+  next = velocityVec_[std::min(static_cast<uint16_t>(fastRunningPoint_ + 1),
+                               static_cast<uint16_t>(numSearchRunningPoints_ - 1))];
 }
 /* 走行位置を取得 */
 float VelocityMapping::GetFastRunningDistance() { return fastAccDistance_; }
+/* 参照している速度テーブルのインデックスを取得 */
+uint16_t VelocityMapping::GetFastRunningPoint() { return fastRunningPoint_; }
 
 /* 不揮発メモリから読み出し */
 bool VelocityMapping::LoadSearchRunningPoints() {

@@ -306,6 +306,7 @@ void Trace::UpdateLog() {
     isWrite = true;
   }
   if (isWrite && (NonVolatileData::kAddressLogData + logBytes_ + sizeof(Log)) < Fram::kMaxAddress) {
+    auto vi = static_cast<float>(velocityMap_.GetFastRunningPoint());
     auto vel = odometry_->GetVelocity();
     auto dis = odometry_->GetDisplacement();
     auto vol = servo_->GetMotorVoltage();
@@ -316,7 +317,7 @@ void Trace::UpdateLog() {
     log_.line = line_->GetState();                                   /* 01 Line State */
     log_.commandVelocity = velocity_;                                /* 02 Command Velocity */
     log_.estimateVelocity = vel.trans;                               /* 03 Estimate Velocity */
-    log_.expectTranslate = 0.0f;                                     /* 04 Expect Translate */
+    log_.expectTranslate = vi;                                       /* 04 Expect Translate */
     log_.estimateTranslate = dis.trans;                              /* 05 Estimate Translate */
     log_.correctedTranslate = velocityMap_.GetFastRunningDistance(); /* 06 Corrected Translate */
     log_.errorAngle = line_->GetError();                             /* 07 Error Angle */
