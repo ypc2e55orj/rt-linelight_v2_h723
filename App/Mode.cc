@@ -42,7 +42,7 @@ static uint8_t SelectModeLoop(uint8_t mask, uint8_t prev) {
       }
     }
     /* 車輪が一定速度以上で回ったかボタンが短押された場合モード変更 */
-    else if (std::abs(velo) > kModeSelectWheelSpeed || pressTime >= kButtonShortPressThreshold) {
+    else if (std::abs(velo) > kModeSelectWheelSpeed) {
       if (std::signbit(velo)) {
         mode = (mode - 1) & mask;
       } else {

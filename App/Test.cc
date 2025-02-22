@@ -48,7 +48,7 @@ static void TestVelocityMeasure() {
 static void TestEnkaigei() {
   auto &ui = Ui::Instance();
   auto &servo = MotionPlaning::MotionPlaning::Instance().Servo();
-  servo.SetGain({0.5f, 0.00f, 0.0f}, {0.0f, 0.00f, 0.0f});
+  servo.SetGain({0.5f, 0.00f, 0.0f}, {0.3f, 0.05f, 0.0f});
 
   /* IMUキャリブレーション */
   if (!MotionSensing::MotionSensing::Instance().CalibrateImu(1000)) {

@@ -32,9 +32,9 @@ class Trace : public Singleton<Trace> {
   struct Parameter {
     Mode mode;               /* モード */
     uint32_t logInterval;    /* ログ出力周期 [ms] */
-    float limitVelocity;     /* 探索時制限速度・最短時初期速度 [m/s] */
+    float maxVelocity;       /* 探索上限速度・最短時初期速度 [m/s] */
     float acceleration;      /* 加速度 [m/ss] */
-    float deceleration;      /* 減速度 [m/ss] */
+    float deceleration;      /* 最短時減速度 [m/ss] */
     Pid::Gain linearGain;    /* 並進PIDゲイン */
     Pid::Gain angularGain;   /* 旋回PIDゲイン */
     Pid::Gain lineErrorGain; /* ライン追従PIDゲイン */
@@ -133,7 +133,8 @@ class Trace : public Singleton<Trace> {
 
   /* 速度・角速度 */
   float acceleration_{0.0f};    /* 加速度 [m/ss] */
-  float maxVelocity_{0.0f};     /* 制限速度 [m/s] */
+  float maxVelocity_{0.0f};     /* 上限速度 [m/s] */
+  float minVelocity_{0.0f};     /* 下限速度 [m/s] */
   float velocity_{0.0f};        /* 速度 [m/s] */
   float angularVelocity_{0.0f}; /* 角速度 [rad/s] */
   Pid lineErrorPid_{};          /* ライン追従PID */

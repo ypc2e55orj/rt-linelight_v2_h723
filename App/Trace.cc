@@ -197,7 +197,8 @@ void Trace::OnResetting() {
 /* スタートマーカーを待つ */
 void Trace::OnStartWaiting() {
   /* 走行制御 */
-  maxVelocity_ = param_.limitVelocity;
+  maxVelocity_ = param_.maxVelocity;
+  minVelocity_ = 0.0f;
   acceleration_ = param_.acceleration;
 }
 /* スタートマーカー通過 */
@@ -232,11 +233,13 @@ void Trace::OnGoalWaiting() {
     velocityMap_.UpdateFastRunning(deltaDistance, line_->IsCrossPassed(), marker_->IsCurvature());
     float now = 0.0f, next = 0.0f;
     velocityMap_.GetFastRunningVelocity(now, next);
-    if (next < now) {
-      maxVelocity_ = std::abs(now);
+    if (now < next) {
+      minVelocity_ = next;
+      maxVelocity_ = now;
       acceleration_ = -1.0f * param_.deceleration;
     } else { /* next > now */
-      maxVelocity_ = std::abs(next);
+      minVelocity_ = now;
+      maxVelocity_ = next;
       acceleration_ = param_.acceleration;
     }
   }
@@ -265,6 +268,7 @@ void Trace::OnGoaled() {
   }
 
   /* 走行制御 */
+  minVelocity_ = 0.0f;
   acceleration_ = CalculateDeceleration(velocity_, param_.stopDistance);
 }
 /* 減速中 */
@@ -283,9 +287,7 @@ void Trace::UpdateMotion() {
   }
   /* 設定された制限速度を元に加減速した速度を計算 */
   velocity_ += acceleration_ * kPeriodicNotifyInterval;
-  if (maxVelocity_ < velocity_) {
-    velocity_ = std::copysign(maxVelocity_, velocity_);
-  }
+  velocity_ = std::min(std::max(velocity_, minVelocity_), maxVelocity_);
   /* ライン追従角速度を計算 */
   angularVelocity_ = lineErrorPid_.Update(0, line_->GetError(), kPeriodicNotifyInterval);
   /* 設定 */
