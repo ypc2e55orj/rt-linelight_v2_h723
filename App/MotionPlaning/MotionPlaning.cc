@@ -46,7 +46,7 @@ void MotionPlaning::TaskEntry() {
         auto velo = odometry.GetVelocity();
         servo_.Update(batteryVoltage, velo.trans, velo.rot);
         if (servo_.IsEmergency()) {
-          motor.Brake();
+          motor.Disable();
         } else {
           motor.SetDuty(servo_.GetMotorDuty());
         }
