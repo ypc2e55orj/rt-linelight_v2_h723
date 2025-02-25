@@ -2,8 +2,6 @@
 
 /* Projects */
 #include "Config.h"
-#include "LineSensing/Calibrator.h"
-#include "LineSensing/LineMarkerAdc.h"
 #include "MotionSensing/MotionSensing.h"
 #include "NonVolatileData.h"
 #include "Periodic.h"
@@ -18,10 +16,8 @@ void LineSensing::PeriodElapsedCallback(TIM_HandleTypeDef *) {
   xSemaphoreGiveFromISR(LineSensing::Instance().periodElapsedSemphr_, &xHigherPriorityTaskWoken);
   portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
-
 bool LineSensing::TurnOnIrLed() {
   HAL_GPIO_WritePin(IR_EN_GPIO_Port, IR_EN_Pin, GPIO_PIN_SET);
-
   return HAL_TIM_Base_Start_IT(&htim7) == HAL_OK &&                          /* 立ち上がり待ちタイマー開始 */
          xSemaphoreTake(periodElapsedSemphr_, pdMS_TO_TICKS(1)) == pdTRUE && /* カウント待ち */
          HAL_TIM_Base_Stop_IT(&htim7) == HAL_OK;
@@ -54,10 +50,10 @@ bool LineSensing::Initialize() {
 
 /* 不揮発メモリからキャリブレーション情報を復元 */
 bool LineSensing::LoadCalibrationData() {
-  LineImpl::Min lineMin;
-  LineImpl::Max lineMax;
-  LineImpl::Coeff lineCoeff;
-  MarkerImpl::Max markerMax;
+  std::array<uint16_t, LineImpl::kNum> lineMin;
+  std::array<uint16_t, LineImpl::kNum> lineMax;
+  std::array<float, LineImpl::kNum> lineCoeff;
+  std::array<uint16_t, MarkerImpl::kNum> markerMax;
   /* 補正値を読み出し */
   if (!NonVolatileData::ReadLineSensorCalibrationData(lineMin, lineMax, lineCoeff, markerMax)) {
     return false;
@@ -78,31 +74,41 @@ bool LineSensing::LoadCalibrationData() {
 
 /* キャリブレーション */
 bool LineSensing::StoreCalibrationData(uint32_t sampleNum) {
-  Calibrator<MarkerAdc> markerCalibrator(MarkerAdc::Instance());
-  Calibrator<LineAdc> lineCalibrator(LineAdc::Instance());
-  vTaskDelay(pdMS_TO_TICKS(5));
+  std::array<uint16_t, LineImpl::kNum> lineMin;
+  std::array<uint16_t, LineImpl::kNum> lineMax;
+  std::array<float, LineImpl::kNum> lineCoeff;
+  std::array<uint16_t, MarkerImpl::kNum> markerMax;
+  auto &markerAdc = MarkerAdc::Instance();
+  auto &lineAdc = LineAdc::Instance();
+  bool failed = false;
   for (uint32_t n = 0; n < sampleNum; n++) {
     if (!Periodic::WaitPeriodicNotify()) {
       return false;
     }
-    if (TurnOnIrLed()) {
-      bool mark = markerCalibrator.Fetch();
-      bool line = lineCalibrator.Fetch();
-      TurnOffIrLed();
-      if (!mark || !line) {
-        return false;
-      }
-    } else {
-      TurnOffIrLed();
-      return false;
+    if (!TurnOnIrLed() || !lineAdc.Fetch() || !markerAdc.Fetch()) {
+      failed = true;
+      break;
     }
+    /* 最大値・最小値を取得 */
+    for (uint32_t num = 0; num < lineAdc.kNum; num++) {
+      uint16_t raw = lineAdc.GetRaw(num);
+      lineMax[num] = std::max(lineMax[num], raw);
+      lineMin[num] = std::min(lineMin[num], raw);
+    }
+    for (uint32_t num = 0; num < markerAdc.kNum; num++) {
+      uint16_t raw = markerAdc.GetRaw(num);
+      markerMax[num] = std::max(markerMax[num], raw);
+    }
+    TurnOffIrLed();
   }
-  markerCalibrator.Calculate();
-  lineCalibrator.Calculate();
-  auto markerMax = markerCalibrator.GetMax();
-  auto lineCoeff = lineCalibrator.GetCoeff();
-  auto lineMin = lineCalibrator.GetMin();
-  auto lineMax = lineCalibrator.GetMax();
+  if (failed) {
+    TurnOffIrLed();
+    return false;
+  }
+  /* 係数を計算 */
+  for (uint32_t num = 0; num < lineAdc.kNum; num++) {
+    lineCoeff[num] = 1 / static_cast<float>(lineMax[num] - lineMin[num]);
+  }
   printf(" ----- LineSensing::StoreCalibrationData(%ld) ----- \r\n", sampleNum);
   for (uint32_t ch = 0; ch < 8; ch++) {
     printf("Right%ld Min: %d, Max: %d, Coeff: %f\r\n", ch, lineMin[ch], lineMax[ch],

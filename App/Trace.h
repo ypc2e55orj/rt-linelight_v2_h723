@@ -8,7 +8,6 @@
 #include "Data/Pid.h"
 #include "Data/Singleton.h"
 #include "Fram.h"
-#include "LineSensing/LineMarker.h"
 #include "LineSensing/LineSensing.h"
 #include "MotionPlaning/MotionPlaning.h"
 #include "MotionPlaning/Suction.h"
@@ -102,8 +101,8 @@ class Trace : public Singleton<Trace> {
     float x;
     float y;
     float theta;
-    LineSensing::SideMarker::State markerRight;
-    LineSensing::SideMarker::State markerLeft;
+    LineSensing::MarkerImpl::State markerRight;
+    LineSensing::MarkerImpl::State markerLeft;
   };
 #pragma pack(pop)
 

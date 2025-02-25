@@ -5,7 +5,8 @@
 #include <main.h>
 
 /* Projects */
-#include "LineMarker.h"
+#include "Line.h"
+#include "Marker.h"
 #include "Wrapper/Task.h"
 
 namespace LineSensing {

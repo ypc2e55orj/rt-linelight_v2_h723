@@ -258,7 +258,6 @@ static void TestLineMark() {
 static void TestLineRaw() {
   auto &ui = Ui::Instance();
   auto &line = LineSensing::LineSensing::Instance().Line();
-  LineSensing::LineImpl::Raw raw{};
   LineSensing::LineSensing::Instance().NotifyStart();
   auto xLastWakeTime = xTaskGetTickCount();
   while (true) {
@@ -267,7 +266,7 @@ static void TestLineRaw() {
       ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
       break;
     }
-    line.GetRaw(raw);
+    auto raw = line.GetRaw();
     for (uint32_t order = 0; order < 16; order++) {
       fprintf(stdout, "%05d", raw[order]);
       if (order != 15) {
@@ -311,7 +310,6 @@ static void TestCollectLineSensor() {
   fflush(stdout);
   auto &line = LineSensing::LineSensing::Instance().Line();
   LineSensing::LineSensing::Instance().NotifyStart();
-  LineSensing::LineImpl::Raw raw{};
   auto xLastWakeTime = xTaskGetTickCount();
   while (true) {
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(10));
@@ -321,7 +319,7 @@ static void TestCollectLineSensor() {
       break;
     } else if (pressTime >= kButtonShortPressThreshold) {
       ui.SetBuzzer(kBuzzerFrequency, kBuzzerEnterDuration);
-      line.GetRaw(raw);
+      auto raw = line.GetRaw();
       for (uint32_t order = 0; order < 16; order++) {
         fprintf(stdout, "%05d", raw[order]);
         if (order != 15) {
