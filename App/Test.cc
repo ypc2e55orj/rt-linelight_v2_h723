@@ -68,7 +68,7 @@ static void TestEnkaigei() {
     if (++count >= 10) {
       count = 0;
       auto tick = HAL_GetTick();
-      auto ff = servo.GetFeedForwardOmega();
+      auto ff = servo.GetFeedForwardAmount();
       auto fb = servo.GetFeedBackAmount();
       auto v = servo.GetMotorVoltage();
       printf(">t:%ld\n>ffr:%f\n>ffl:%f\n>fbv:%f\n>fbo:%f\n>vr:%f\n>vl:%f\n", tick, ff[0], ff[1], fb[0], fb[1], v[0],
