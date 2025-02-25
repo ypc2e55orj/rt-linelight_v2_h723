@@ -35,7 +35,6 @@ class ServoImpl {
   ControlAmount GetMotorDuty();
 
   /* 制御量を取得 */
-  ControlAmount GetFeedForwardOmega();
   ControlAmount GetFeedForwardAmount();
   ControlAmount GetFeedBackAmount();
 

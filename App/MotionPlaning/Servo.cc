@@ -142,10 +142,6 @@ ServoImpl::ControlAmount ServoImpl::GetMotorDuty() {
 }
 
 /* 制御量を取得 */
-ServoImpl::ControlAmount ServoImpl::GetFeedForwardOmega() {
-  std::scoped_lock<Mutex> lock(mtx_);
-  return feedforwardWheelOmega_;
-}
 ServoImpl::ControlAmount ServoImpl::GetFeedForwardAmount() {
   std::scoped_lock<Mutex> lock(mtx_);
   return feedforward_;
