@@ -195,7 +195,7 @@ typedef struct
 
 typedef union
 {
-  struct
+  struct MAX11128_DATA_
   {
     uint16_t data : 12;
     uint16_t ch : 4;
