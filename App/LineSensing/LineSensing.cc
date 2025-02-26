@@ -81,6 +81,9 @@ bool LineSensing::StoreCalibrationData(uint32_t sampleNum) {
   auto &markerAdc = MarkerAdc::Instance();
   auto &lineAdc = LineAdc::Instance();
   bool failed = false;
+  lineMin.fill(UINT16_MAX);
+  lineMax.fill(0);
+  markerMax.fill(0);
   for (uint32_t n = 0; n < sampleNum; n++) {
     if (!Periodic::WaitPeriodicNotify()) {
       return false;
